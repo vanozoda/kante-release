@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kante</title>
+<meta name="description" content="Kante, ein schlanker Browser für Windows 11.">
+<!-- The Pages site of the update channel (HANDBUCH.md "Release"); written
+     by cargo xtask publish --setup from installer/pages/. Colours from
+     shell/design/tokens.css. -->
+<style>
+  :root {
+    --surface: #F5F6FA; --raised: #FFFFFF; --ink: #121A38; --ink-muted: #4A5475;
+    --accent: #0B7F75; --accent-hover: #09695F; --on-accent: #FFFFFF; --ring: #D7DBE4;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --surface: #111936; --raised: #18224A; --ink: #E8EBF4; --ink-muted: #9BA5C6;
+      --accent: #3DD6C3; --accent-hover: #6EF0DC; --on-accent: #0B1129; --ring: #151C38;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 16px;
+    background: var(--surface); color: var(--ink);
+    font: 16px/1.5 "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+  }
+  main {
+    width: 100%; max-width: 440px; padding: 40px 32px; border-radius: 16px;
+    background: var(--raised); box-shadow: 0 0 0 1px var(--ring), 0 12px 32px rgb(18 26 56 / 0.08);
+    text-align: center;
+  }
+  svg { width: 72px; height: 72px; }
+  h1 { margin: 16px 0 4px; font-size: 28px; font-weight: 600; letter-spacing: -0.01em; }
+  p { margin: 0 0 24px; color: var(--ink-muted); }
+  a.get {
+    display: inline-block; padding: 10px 20px; border-radius: 999px; text-decoration: none;
+    background: var(--accent); color: var(--on-accent); font-weight: 600;
+  }
+  a.get:hover { background: var(--accent-hover); }
+  small { display: block; margin-top: 20px; color: var(--ink-muted); }
+  small a { color: inherit; }
+</style>
+</head>
+<body>
+<main>
+  <svg viewBox="0 0 256 256" role="img" aria-label="Kante">
+    <defs><clipPath id="plate"><rect x="8" y="8" width="240" height="240" rx="56"/></clipPath></defs>
+    <g clip-path="url(#plate)">
+      <path d="M0 0 H98 L70 256 H0 Z" fill="#2CC9B6"/>
+      <path d="M112 0 H256 V256 H84 Z" fill="#14204C"/>
+    </g>
+  </svg>
+  <h1>Kante</h1>
+  <p>Ein schlanker Browser für Windows 11.<br>A lean browser for Windows 11.</p>
+  <a class="get" href="https://github.com/vanozoda/kante-release/releases/latest">Herunterladen · Download</a>
+  <small>Installiert pro Benutzer, ohne Administrator. Updates kommen von selbst, signiert.<br>
+  <a href="https://github.com/vanozoda/kante-release/releases">Alle Versionen</a></small>
+</main>
+</body>
+</html>
