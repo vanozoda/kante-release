@@ -1,61 +1,604 @@
 <!doctype html>
-<html lang="de">
+<html lang="de" data-lang="de">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>kante</title>
-<meta name="description" content="kante, ein schlanker Browser für Windows 11.">
-<!-- The Pages site of the update channel (HANDBUCH.md "Release"); written
-     by cargo xtask publish --setup from installer/pages/. Colours from
-     shell/design/tokens.css. -->
-<style>
-  :root {
-    --surface: #F5F6FA; --raised: #FFFFFF; --ink: #121A38; --ink-muted: #4A5475;
-    --accent: #0B7F75; --accent-hover: #09695F; --on-accent: #FFFFFF; --ring: #D7DBE4;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --surface: #111936; --raised: #18224A; --ink: #E8EBF4; --ink-muted: #9BA5C6;
-      --accent: #3DD6C3; --accent-hover: #6EF0DC; --on-accent: #0B1129; --ring: #151C38;
+<title>kante – ein Browser für Windows 11</title>
+<meta name="description" content="kante, ein schlanker Browser für Windows 11: eine Leiste mit Tabs, darunter die Seite. Spaces, Tab-Suche, Werbeblocker, Lesemodus, schwebendes Video. Ohne Konto, ohne Telemetrie.">
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="icon" href="design/kante-icon.svg" type="image/svg+xml">
+<!-- The Pages site under kante.vanozoda.com (DECISIONS.md D-023). cargo xtask
+     publish writes it with every release: 0.2.0 and https://github.com/vanozoda/kante-release/releases/download/v0.2.0/kante-setup-0.2.0.exe become the
+     version and its installer, the design/ files come from shell/design.
+     Every picture is a scene built from the design package's components. -->
+<script>
+  (function () {
+    var h = document.documentElement, m = matchMedia('(prefers-color-scheme: dark)');
+    function theme() { h.dataset.theme = m.matches ? 'dark' : 'light'; }
+    theme();
+    if (m.addEventListener) m.addEventListener('change', theme);
+    var l = null;
+    try { l = localStorage.getItem('kante.lang'); } catch (e) {}
+    if (l !== 'de' && l !== 'en') {
+      var langs = navigator.languages || [navigator.language || ''];
+      l = /^de\b/i.test(langs[0] || '') ? 'de' : 'en';
     }
-  }
+    h.dataset.lang = l; h.lang = l; h.classList.add('js');
+  })();
+</script>
+<link rel="stylesheet" href="design/tokens.css">
+<link rel="stylesheet" href="design/components.css">
+<style>
+  :root { color-scheme: light; }
+  :root[data-theme="dark"] { color-scheme: dark; }
+  html[data-lang="de"] [lang="en"]:not(html), html[data-lang="en"] [lang="de"]:not(html) { display: none !important; }
   * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
   body {
-    margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 16px;
-    background: var(--surface); color: var(--ink);
-    font: 16px/1.5 "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+    margin: 0; background: var(--surface); color: var(--ink);
+    font: 400 17px/27px var(--font-sans); -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
   }
-  main {
-    width: 100%; max-width: 440px; padding: 40px 32px; border-radius: 16px;
-    background: var(--raised); box-shadow: 0 0 0 1px var(--ring), 0 12px 32px rgb(18 26 56 / 0.08);
-    text-align: center;
+  a { color: var(--accent-ink); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+  a:focus-visible, button:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+  h1, h2, h3, p { margin: 0; }
+  .wrap { max-width: 1136px; margin: 0 auto; padding: 0 var(--space-8); }
+
+  /* ---------- top ---------- */
+  .top { position: relative; z-index: 2; display: flex; align-items: center; gap: var(--space-4); height: 72px; }
+  .brand { display: inline-flex; align-items: center; gap: var(--space-2); color: var(--ink); text-decoration: none; font: 600 20px/24px var(--font-sans); letter-spacing: -0.01em; }
+  .brand img { width: 28px; height: 28px; display: block; }
+  .top .grow { flex: 1; }
+  .langs { display: none; padding: 2px; gap: 2px; border-radius: var(--radius-md); background: var(--surface-sunken); }
+  .js .langs { display: inline-flex; }
+  .langs button {
+    border: 0; padding: 0 var(--space-2); height: 26px; border-radius: var(--radius-sm); background: transparent;
+    font: 500 12px/16px var(--font-sans); color: var(--ink-muted); cursor: pointer;
   }
-  svg { width: 72px; height: 72px; }
-  h1 { margin: 16px 0 4px; font-size: 28px; font-weight: 600; letter-spacing: -0.01em; }
-  p { margin: 0 0 24px; color: var(--ink-muted); }
-  a.get {
-    display: inline-block; padding: 10px 20px; border-radius: 999px; text-decoration: none;
-    background: var(--accent); color: var(--on-accent); font-weight: 600;
+  .langs button[aria-pressed="true"] { background: var(--surface-raised); color: var(--ink); box-shadow: var(--shadow-page); }
+  .k-btn { text-decoration: none; cursor: pointer; }
+
+  /* ---------- hero ---------- */
+  .hero { position: relative; background: var(--chrome); overflow: hidden; padding-bottom: var(--space-12); }
+  .hero__text { position: relative; z-index: 1; padding: var(--space-12) 0 var(--space-12); max-width: 600px; }
+  .hero__name { font: 600 clamp(80px, 13vw, 132px)/0.92 var(--font-sans); letter-spacing: -0.03em; }
+  .hero__lead { margin-top: var(--space-5); font-size: 21px; line-height: 31px; color: var(--ink-muted); max-width: 540px; }
+  .get-row { margin-top: var(--space-8); display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3) var(--space-5); }
+  .get { height: 46px; padding: 0 var(--space-5); font-size: 15px; line-height: 20px; }
+  .get .k-icon { width: 18px; height: 18px; }
+  .meta { color: var(--ink-muted); font-size: 14px; line-height: 20px; }
+  .bands { position: absolute; top: 0; right: 0; height: 520px; width: 50%; pointer-events: none; }
+  .bands .ink { fill: var(--ink); } .bands .accent { fill: var(--accent); } .bands .hl { fill: var(--highlight); }
+  .bands .soft { fill: var(--accent-soft); } .bands .night { fill: var(--night); }
+
+  /* ---------- scenes: the design package's components at app size,
+     scaled down as a whole where the page is narrower ---------- */
+  .scene { position: relative; width: 100%; margin: 0 auto; overflow: hidden; }
+  .js .scene > .stage { position: absolute; left: 0; top: 0; }
+  .stage { transform-origin: 0 0; user-select: none; -webkit-user-select: none; }
+  .stage span { cursor: default; }
+  .frame { border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-float); }
+
+  /* the window: bar, then the page card */
+  .win { display: flex; flex-direction: column; background: var(--chrome); }
+  .win > .k-strip { flex: none; }
+  .win__page { flex: 1; margin: 0 var(--space-2) var(--space-2); border-radius: var(--radius-xl); background: var(--surface); box-shadow: var(--shadow-page); overflow: hidden; position: relative; }
+  .k-strip .k-strip__tabs { flex: 0 1 auto; }
+  .k-strip .grow { flex: 1 1 auto; min-width: var(--space-4); }
+  .k-strip .sep { width: 1px; height: 18px; background: var(--line); margin: 0 4px; flex: none; }
+  .k-strip > .k-iconbtn, .doors .k-iconbtn { flex: none; }
+  .doors { display: flex; align-items: center; gap: 2px; margin-right: var(--space-1); }
+  .k-tab__fav.n { background: var(--night); color: var(--on-night); }
+  .k-tab__fav.a { background: var(--accent); color: var(--on-accent); }
+  .k-tab__fav.i { background: var(--ink); color: var(--chrome); }
+  .k-tab__fav.m { background: var(--line-strong); color: var(--chrome); }
+  .k-tab .tab-warn { display: inline-flex; align-items: center; gap: 4px; color: var(--danger); font-weight: 560; flex: none; }
+
+  /* spaces in the bar (D-022), as the Shell draws them */
+  .sp { display: flex; align-items: center; gap: 2px; flex: none; }
+  .sp .k-space { position: relative; display: grid; place-items: center; width: 28px; height: 28px; border-radius: var(--radius-sm); }
+  .sp .face { font-size: 16px; line-height: 1; opacity: 0.45; filter: grayscale(0.7); }
+  .sp .k-space.is-active .face { opacity: 1; filter: none; }
+  .sp .k-space.is-active::after { content: ""; position: absolute; left: 50%; bottom: 1px; width: 12px; height: 3px; margin-left: -6px; border-radius: 1px; background: var(--accent); transform: skewX(var(--angle-spalt)); }
+  .sp .add { width: 24px; height: 24px; margin-left: var(--space-1); }
+  .sp .add.is-hot { background: var(--hover); color: var(--ink); }
+
+  /* a page: a site's own bar, an article, placeholders */
+  .pg__site { display: flex; align-items: center; gap: var(--space-3); height: 52px; padding: 0 var(--space-6); border-bottom: 1px solid var(--line); }
+  .pg__logo { width: 22px; height: 22px; border-radius: 6px; background: var(--night); }
+  .pg__bar, .pg__line { display: block; height: 10px; border-radius: 5px; background: var(--surface-sunken); }
+  .pg__art { padding: var(--space-8) var(--space-8) 0; max-width: 620px; display: flex; flex-direction: column; gap: var(--space-3); }
+  .pg__kicker { font-size: 12px; line-height: 16px; font-weight: 500; color: var(--ink-muted); }
+  .pg__title { font: 600 30px/36px var(--font-sans); letter-spacing: -0.015em; }
+  .pg__p { font-size: 15px; line-height: 24px; color: var(--ink); }
+  .pg__img { height: 120px; border-radius: var(--radius-lg); background: linear-gradient(135deg, var(--highlight), var(--surface-sunken)); }
+
+  /* folded: the page takes the window, the bar slides over its top */
+  .fold { position: relative; height: 100%; background: var(--surface); }
+  .fold .k-strip { position: absolute; left: 0; right: 0; top: 0; border-radius: 0 0 var(--radius-xl) var(--radius-xl); box-shadow: var(--shadow-float); }
+  .fold .pg__art { padding-top: 72px; }
+  .fold__hint { position: absolute; left: 50%; bottom: var(--space-4); transform: translateX(-50%); white-space: nowrap; }
+
+  /* a space's card under the + */
+  .spacecard { position: absolute; right: 150px; top: 46px; width: 320px; display: flex; flex-direction: column; gap: var(--space-3); padding: var(--space-4); border-radius: var(--radius-lg); background: var(--surface-raised); box-shadow: var(--shadow-popover); }
+  .spacecard .k-panel__title { margin: 0; }
+  .spacecard .k-input { justify-content: flex-start; }
+  .spacecard .caret { width: 1.5px; height: 16px; background: var(--accent-ink); margin-left: -6px; }
+  .spacecard .emojis { display: grid; grid-template-columns: repeat(8, 1fr); gap: 2px; }
+  .spacecard .emoji { height: 32px; display: grid; place-items: center; border-radius: var(--radius-sm); font-size: 18px; line-height: 1; }
+  .spacecard .emoji.is-selected { background: var(--highlight); box-shadow: inset 0 0 0 1.5px var(--accent); }
+  .spacecard .other { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); font-size: 12px; line-height: 16px; }
+  .spacecard .other .k-input { width: 64px; }
+  .spacecard .segs { display: flex; flex-direction: column; gap: 2px; }
+  .spacecard .tick { margin-left: auto; color: var(--accent-ink); }
+  .spacecard .note { font-size: 12px; line-height: 16px; }
+  .spacecard .buttons { display: flex; gap: var(--space-2); justify-content: flex-end; }
+
+  /* tab search over the page */
+  .scrim { position: absolute; inset: 0; background: var(--scrim); }
+  .k-overlay__input .typed { flex: 1; font: 400 17px/24px var(--font-sans); color: var(--ink); display: flex; align-items: center; }
+  .k-overlay__input .caret { width: 1.5px; height: 20px; background: var(--accent-ink); margin-left: 1px; }
+  .k-suggest__row .space { flex: none; font-size: 12px; color: var(--ink-muted); }
+
+  /* the site card under the selected tab */
+  .k-sitecard { position: absolute; left: 76px; top: 46px; }
+  .k-select { display: inline-flex; align-items: center; gap: 4px; }
+  .k-sitecard__opt .k-switch, .k-sitecard__opt .k-select, .k-sitecard__opt .k-select span { flex: none; }
+  .k-select .k-icon { width: 12px; height: 12px; }
+  .k-menu__item .count { color: var(--ink-muted); }
+
+  /* the floating video over other windows */
+  .desk { position: relative; height: 100%; background: var(--surface-sunken); }
+  .desk__win { position: absolute; left: 24px; top: 24px; width: 360px; height: 230px; border-radius: var(--radius-lg); background: var(--chrome); box-shadow: var(--shadow-popover); overflow: hidden; display: flex; flex-direction: column; }
+  .desk__win .head { height: 32px; display: flex; align-items: center; gap: 6px; padding: 0 var(--space-3); }
+  .desk__win .head i { width: 40px; height: 8px; border-radius: 4px; background: var(--surface-sunken); }
+  .desk__win .body { flex: 1; margin: 0 6px 6px; border-radius: var(--radius-md); background: var(--surface); padding: var(--space-4); display: flex; flex-direction: column; gap: var(--space-2); }
+  .desk .k-float { position: absolute; right: 20px; bottom: 20px; width: 320px; }
+  .k-float__video::before { content: ""; position: absolute; left: 34%; top: 30%; width: 34%; height: 46%; border-radius: 50% 50% 8px 8px; background: color-mix(in srgb, var(--on-night) 10%, transparent); }
+  .k-float__video::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 40%; background: linear-gradient(transparent, color-mix(in srgb, var(--accent) 14%, transparent)); }
+
+  /* ---------- features ---------- */
+  .features { padding: var(--space-12) 0; display: flex; flex-direction: column; gap: 112px; }
+  .intro { max-width: 720px; padding-top: var(--space-12); }
+  .feature { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: var(--space-12); align-items: center; }
+  .feature:nth-child(even) { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); }
+  .feature:nth-child(even) .feature__text { order: 2; }
+  .feature__text { display: flex; flex-direction: column; gap: var(--space-4); }
+  .label-row { font: 500 13px/18px var(--font-sans); color: var(--ink-muted); }
+  h2 { font: 600 38px/44px var(--font-sans); letter-spacing: -0.02em; }
+  .feature p { color: var(--ink-muted); }
+  .keys { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-4); }
+  .keys .k-kbd { font-size: 13px; line-height: 18px; gap: 3px; }
+  .keys .k-kbd kbd { min-width: 24px; padding: 2px 6px; }
+  .keys .what { font-size: 14px; color: var(--ink-muted); margin-left: var(--space-1); font-family: var(--font-sans); }
+  .media { display: flex; flex-direction: column; gap: var(--space-4); min-width: 0; }
+  .stagebox { width: 100%; }
+
+  /* ---------- more ---------- */
+  .band { background: var(--chrome); padding: 96px 0; }
+  .grid { margin-top: var(--space-8); display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-4); }
+  .card { padding: var(--space-5); border-radius: var(--radius-xl); background: var(--surface); box-shadow: var(--shadow-page); display: flex; flex-direction: column; gap: var(--space-2); }
+  .card .k-icon { width: 20px; height: 20px; color: var(--ink-muted); margin-bottom: var(--space-1); }
+  .card h3 { font: 600 16px/22px var(--font-sans); }
+  .card p { font-size: 15px; line-height: 23px; color: var(--ink-muted); }
+  .card .k-kbd { margin-top: auto; padding-top: var(--space-2); font-size: 12px; }
+
+  /* ---------- trust ---------- */
+  .trust { padding: 96px 0; display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: var(--space-12); }
+  .trust ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-5); }
+  .trust li { display: grid; grid-template-columns: 24px minmax(0, 1fr); gap: var(--space-4); }
+  .trust li .k-icon { width: 20px; height: 20px; color: var(--ink-muted); margin-top: 4px; }
+  .trust li b { display: block; font-weight: 600; }
+  .trust li span.t { color: var(--ink-muted); }
+
+  /* ---------- end ---------- */
+  .end { background: var(--chrome); padding: 96px 0 var(--space-12); text-align: center; }
+  .end img { width: 72px; height: 72px; }
+  .end h2 { margin-top: var(--space-5); }
+  .end .get-row { justify-content: center; }
+  .end .meta { width: 100%; }
+  footer { margin-top: 80px; display: flex; flex-wrap: wrap; justify-content: center; gap: var(--space-2) var(--space-5); font-size: 14px; color: var(--ink-muted); }
+  footer a { color: var(--ink-muted); }
+
+  @media (max-width: 960px) {
+    .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .feature, .feature:nth-child(even), .trust { grid-template-columns: minmax(0, 1fr); gap: var(--space-6); }
+    .feature:nth-child(even) .feature__text { order: 0; }
+    .bands { opacity: 0.35; width: 70%; }
   }
-  a.get:hover { background: var(--accent-hover); }
-  small { display: block; margin-top: 20px; color: var(--ink-muted); }
-  small a { color: inherit; }
+  @media (max-width: 640px) {
+    .wrap { padding: 0 16px; }
+    .top .get-sm .lbl { display: none; }
+    .hero__lead { font-size: 18px; line-height: 27px; }
+    h2 { font-size: 30px; line-height: 36px; }
+    .grid { grid-template-columns: minmax(0, 1fr); }
+    .features { gap: 80px; }
+    .band, .trust, .end { padding-top: 72px; padding-bottom: 72px; }
+    .bands { display: none; }
+  }
 </style>
 </head>
 <body>
-<main>
-  <svg viewBox="0 0 256 256" role="img" aria-label="kante">
-    <defs><clipPath id="plate"><rect x="8" y="8" width="240" height="240" rx="56"/></clipPath></defs>
-    <g clip-path="url(#plate)">
-      <path d="M0 0 H98 L70 256 H0 Z" fill="#2CC9B6"/>
-      <path d="M112 0 H256 V256 H84 Z" fill="#14204C"/>
+
+<div class="hero">
+  <svg class="bands" viewBox="0 0 560 520" preserveAspectRatio="xMinYMin slice" aria-hidden="true">
+    <g transform="skewX(-6) translate(60 0)">
+      <rect class="accent" x="40" y="-20" width="88" height="560"/>
+      <rect class="ink" x="140" y="-20" width="168" height="560"/>
+      <rect class="hl" x="320" y="-20" width="56" height="560"/>
+      <rect class="soft" x="388" y="-20" width="40" height="560"/>
+      <rect class="night" x="440" y="-20" width="200" height="560"/>
     </g>
   </svg>
-  <h1>kante</h1>
-  <p>Ein schlanker Browser für Windows 11.<br>A lean browser for Windows 11.</p>
-  <a class="get" href="https://github.com/vanozoda/kante-release/releases/latest">Herunterladen · Download</a>
-  <small>Installiert pro Benutzer, ohne Administrator. Updates kommen von selbst, signiert.<br>
-  <a href="https://github.com/vanozoda/kante-release/releases">Alle Versionen</a></small>
+
+  <header class="top wrap">
+    <a class="brand" href="#"><img src="design/kante-icon.svg" alt="" width="28" height="28"><span>kante</span></a>
+    <span class="grow"></span>
+    <nav class="langs" aria-label="Sprache · Language">
+      <button type="button" data-set-lang="de" aria-pressed="true" title="Deutsch">DE</button><button type="button" data-set-lang="en" aria-pressed="false" title="English">EN</button>
+    </nav>
+    <a class="k-btn k-btn--secondary get-sm" href="https://github.com/vanozoda/kante-release/releases/download/v0.2.0/kante-setup-0.2.0.exe"><i class="k-icon" data-icon="download"></i><span class="lbl"><span lang="de">Herunterladen</span><span lang="en">Download</span></span></a>
+  </header>
+
+  <div class="wrap">
+    <div class="hero__text">
+      <h1 class="hero__name">kante</h1>
+      <p class="hero__lead">
+        <span lang="de">Ein Browser für Windows 11, der aus dem Weg geht: oben eine Leiste mit deinen Tabs, darunter die Seite. Sonst nichts.</span>
+        <span lang="en">A browser for Windows 11 that stays out of the way: one bar with your tabs at the top, the page below it. Nothing else.</span>
+      </p>
+      <div class="get-row">
+        <a class="k-btn k-btn--primary get" href="https://github.com/vanozoda/kante-release/releases/download/v0.2.0/kante-setup-0.2.0.exe"><i class="k-icon" data-icon="download"></i><span lang="de">kante herunterladen</span><span lang="en">Download kante</span></a>
+        <span class="meta"><span lang="de">Version 0.2.0 · Windows 11, 64 Bit · ohne Administratorrechte</span><span lang="en">Version 0.2.0 · Windows 11, 64-bit · no administrator rights</span></span>
+      </div>
+    </div>
+
+    <!-- The whole window: bar with pins, tabs, spaces and doors, the page under it. -->
+    <div class="scene" data-w="1040" style="max-width:1040px" aria-hidden="true">
+      <div class="stage k-root" inert style="width:1040px">
+        <div class="win frame" style="height:560px">
+          <div class="k-strip">
+            <span class="k-pin">M</span><span class="k-pin">K</span>
+            <span class="sep"></span>
+            <div class="k-strip__tabs k-tabs"><span class="k-tabs__pill"></span>
+              <span class="k-tab is-selected"><span class="k-tab__fav n">E</span><span class="k-tab__title"><span lang="de">Die Kante des Fensters – Essay</span><span lang="en">The edge of the window – essay</span></span><i class="k-icon k-tab__close" data-icon="close"></i></span>
+              <span class="k-tab"><span class="k-tab__fav a">P</span><span class="k-tab__title"><span lang="de">Posteingang (12)</span><span lang="en">Inbox (12)</span></span><i class="k-icon k-tab__close" data-icon="close"></i></span>
+              <span class="k-tab"><span class="k-tab__fav i">W</span><span class="k-tab__title"><span lang="de">Wetter in Köln</span><span lang="en">Weather in Cologne</span></span><i class="k-icon k-tab__close" data-icon="close"></i></span>
+            </div>
+            <span class="k-iconbtn"><i class="k-icon" data-icon="new-tab"></i></span>
+            <span class="grow"></span>
+            <div class="sp"><span class="k-space is-active"><span class="face">🏠</span></span><span class="k-space"><span class="face">💼</span></span><span class="k-space"><span class="face">🎓</span></span><span class="k-iconbtn add"><i class="k-icon" data-icon="new-tab"></i></span></div>
+            <div class="doors"><span class="k-iconbtn"><i class="k-icon" data-icon="passwords"></i></span><span class="k-iconbtn"><i class="k-icon" data-icon="extensions"></i></span><span class="k-iconbtn"><i class="k-icon" data-icon="menu"></i></span></div>
+            <div class="k-caption"><span class="k-iconbtn"><i class="k-icon" data-icon="minimize"></i></span><span class="k-iconbtn"><i class="k-icon" data-icon="maximize"></i></span><span class="k-iconbtn k-iconbtn--close"><i class="k-icon" data-icon="close"></i></span></div>
+          </div>
+          <div class="win__page">
+            <div class="pg__site"><span class="pg__logo"></span><span class="pg__bar" style="width:120px"></span><span style="flex:1"></span><span class="pg__bar" style="width:56px"></span><span class="pg__bar" style="width:56px"></span><span class="pg__bar" style="width:56px"></span></div>
+            <div class="pg__art">
+              <span class="pg__kicker"><span lang="de">Essay · 6 Min. Lesezeit</span><span lang="en">Essay · 6 min read</span></span>
+              <span class="pg__title"><span lang="de">Die Kante des Fensters</span><span lang="en">The edge of the window</span></span>
+              <span class="pg__p"><span lang="de">Ein Browser, der aus dem Weg geht, lässt die Seite sprechen. Was bleibt, ist der Text, ein Bild hier und da und genug Rand, dass das Auge Ruhe findet.</span><span lang="en">A browser that stays out of the way lets the page speak. What is left is the text, a picture here and there, and enough margin for the eye to rest.</span></span>
+              <span class="pg__img"></span>
+              <span class="pg__line" style="width:92%"></span><span class="pg__line" style="width:84%"></span><span class="pg__line" style="width:88%"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<main>
+  <div class="wrap">
+    <div class="intro">
+      <h2><span lang="de">Alles, was ein Browser braucht. Und nichts, was im Weg steht.</span><span lang="en">Everything a browser needs. Nothing that gets in the way.</span></h2>
+    </div>
+
+    <div class="features">
+
+      <!-- 1 The bar, folded -->
+      <section class="feature">
+        <div class="feature__text">
+          <span class="label-row"><span lang="de">Die Leiste</span><span lang="en">The bar</span></span>
+          <h2><span lang="de">Eine Leiste, dann die Seite</span><span lang="en">One bar, then the page</span></h2>
+          <p><span lang="de">Keine Toolbar, keine Startseite, keine Statusleiste. Tabs, angeheftete Seiten und Spaces teilen sich eine Leiste oben. Strg+S klappt sie ein, dann gehört das ganze Fenster der Seite. Ruht die Maus am oberen Rand, gleitet die Leiste wieder herein.</span><span lang="en">No toolbar, no start page, no status bar. Tabs, pinned sites and spaces share one bar at the top. Ctrl+S folds it away and the whole window belongs to the page. Rest the pointer at the top edge and the bar slides back in.</span></p>
+          <div class="keys"><span class="k-kbd"><kbd lang="de">Strg</kbd><kbd lang="en">Ctrl</kbd><kbd>S</kbd><span class="what"><span lang="de">Leiste einklappen</span><span lang="en">Fold the bar</span></span></span></div>
+        </div>
+        <div class="media">
+          <div class="scene" data-w="600" style="max-width:600px" aria-hidden="true">
+            <div class="stage k-root" inert style="width:600px">
+              <div class="frame" style="height:340px">
+                <div class="fold">
+                  <div class="pg__art">
+                    <span class="pg__kicker"><span lang="de">Essay · 6 Min. Lesezeit</span><span lang="en">Essay · 6 min read</span></span>
+                    <span class="pg__title"><span lang="de">Die Kante des Fensters</span><span lang="en">The edge of the window</span></span>
+                    <span class="pg__line" style="width:94%"></span><span class="pg__line" style="width:86%"></span><span class="pg__line" style="width:90%"></span><span class="pg__line" style="width:62%"></span>
+                  </div>
+                  <div class="k-strip">
+                    <div class="k-strip__tabs k-tabs"><span class="k-tabs__pill"></span>
+                      <span class="k-tab is-selected"><span class="k-tab__fav n">E</span><span class="k-tab__title"><span lang="de">Die Kante des Fensters</span><span lang="en">The edge of the window</span></span><i class="k-icon k-tab__close" data-icon="close"></i></span>
+                      <span class="k-tab"><span class="k-tab__fav a">P</span><span class="k-tab__title"><span lang="de">Posteingang</span><span lang="en">Inbox</span></span><i class="k-icon k-tab__close" data-icon="close"></i></span>
+                    </div>
+                    <span class="grow"></span>
+                    <div class="sp"><span class="k-space is-active"><span class="face">🏠</span></span><span class="k-space"><span class="face">💼</span></span></div>
+                    <div class="k-caption"><span class="k-iconbtn"><i class="k-icon" data-icon="minimize"></i></span><span class="k-iconbtn"><i class="k-icon" data-icon="maximize"></i></span><span class="k-iconbtn k-iconbtn--close"><i class="k-icon" data-icon="close"></i></span></div>
+                  </div>
+                  <div class="fold__hint"><span class="k-hint"><i class="k-icon" data-icon="unfold"></i><span lang="de">Eingeklappt: Maus an den oberen Rand</span><span lang="en">Folded: pointer to the top edge</span></span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2 Spaces -->
+      <section class="feature">
+        <div class="feature__text">
+          <span class="label-row">Spaces</span>
+          <h2><span lang="de">Getrennt, was getrennt bleiben soll</span><span lang="en">Apart what should stay apart</span></h2>
+          <p><span lang="de">Arbeit, Zuhause, ein Projekt: Jeder Space hat eigene Tabs und Pins und zeigt sein Emoji in der Leiste. Alt+1 bis 9 oder ein Wischen auf dem Touchpad über der Leiste wechselt. Ein neuer Space ist angemeldet wie hier oder frisch, mit eigenen Cookies und Anmeldungen. Ein Rechtsklick auf das Emoji bearbeitet, verschiebt oder löscht ihn.</span><span lang="en">Work, home, a project: each space has its own tabs and pins and shows its emoji in the bar. Alt+1 to 9 or a touchpad swipe over the bar switches. A new space is either signed in like here or fresh, with its own cookies and sign-ins. Right-click the emoji to edit, move or delete it.</span></p>
+          <div class="keys"><span class="k-kbd"><kbd>Alt</kbd><kbd>1</kbd>–<kbd>9</kbd><span class="what"><span lang="de">Space wechseln</span><span lang="en">Switch space</span></span></span></div>
+        </div>
+        <div class="media">
+          <div class="scene" data-w="600" style="max-width:600px" aria-hidden="true">
+            <div class="stage k-root" inert style="width:600px">
+              <div class="frame win" style="height:470px;position:relative">
+                <div class="k-strip">
+                  <div class="k-strip__tabs k-tabs"><span class="k-tabs__pill"></span>
+                    <span class="k-tab is-selected"><span class="k-tab__fav i">B</span><span class="k-tab__title"><span lang="de">Bahn: Köln – Lissabon</span><span lang="en">Rail: Cologne – Lisbon</span></span><i class="k-icon k-tab__close" data-icon="close"></i></span>
+                  </div>
+                  <span class="grow"></span>
+                  <div class="sp"><span class="k-space"><span class="face">🏠</span></span><span class="k-space is-active"><span class="face">💼</span></span><span class="k-space"><span class="face">🎓</span></span><span class="k-iconbtn add is-hot"><i class="k-icon" data-icon="new-tab"></i></span></div>
+                  <div class="k-caption"><span class="k-iconbtn"><i class="k-icon" data-icon="minimize"></i></span><span class="k-iconbtn"><i class="k-icon" data-icon="maximize"></i></span><span class="k-iconbtn k-iconbtn--close"><i class="k-icon" data-icon="close"></i></span></div>
+                </div>
+                <div class="win__page">
+                  <div class="pg__art"><span class="pg__line" style="width:60%;height:14px"></span><span class="pg__line" style="width:90%"></span><span class="pg__line" style="width:82%"></span><span class="pg__img" style="width:46%"></span><span class="pg__line" style="width:40%"></span></div>
+                </div>
+                <div class="spacecard">
+                  <span class="k-panel__title"><span lang="de">Neuer Space</span><span lang="en">New space</span></span>
+                  <span class="k-input"><span lang="de">Reisen</span><span lang="en">Travel</span><span class="caret"></span></span>
+                  <div class="emojis">
+                    <span class="emoji">🏠</span><span class="emoji">💼</span><span class="emoji">🎓</span><span class="emoji">💻</span><span class="emoji">🛒</span><span class="emoji is-selected">✈️</span><span class="emoji">🎮</span><span class="emoji">🎵</span>
+                    <span class="emoji">📚</span><span class="emoji">💰</span><span class="emoji">🏃</span><span class="emoji">🍳</span><span class="emoji">🎨</span><span class="emoji">🧪</span><span class="emoji">🌱</span><span class="emoji">❤️</span>
+                  </div>
+                  <span class="other"><span class="k-muted"><span lang="de">Anderes Emoji (Win+.)</span><span lang="en">Another emoji (Win+.)</span></span><span class="k-input"></span></span>
+                  <div class="segs">
+                    <span class="k-menu__item is-hot"><i class="k-icon" data-icon="spaces"></i><span class="k-menu__label"><span lang="de">Angemeldet wie hier</span><span lang="en">Signed in like here</span></span><i class="k-icon tick" data-icon="check"></i></span>
+                    <span class="k-menu__item"><i class="k-icon" data-icon="private"></i><span class="k-menu__label"><span lang="de">Frisch</span><span lang="en">Fresh</span></span></span>
+                  </div>
+                  <span class="note k-muted"><span lang="de">Angemeldet, wo du in diesem Space angemeldet bist.</span><span lang="en">Signed in wherever you are in this space.</span></span>
+                  <div class="buttons"><span class="k-btn k-btn--secondary"><span lang="de">Abbrechen</span><span lang="en">Cancel</span></span><span class="k-btn k-btn--primary"><span lang="de">Erstellen</span><span lang="en">Create</span></span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3 Tab search -->
+      <section class="feature">
+        <div class="feature__text">
+          <span class="label-row"><span lang="de">Tab-Suche</span><span lang="en">Tab search</span></span>
+          <h2><span lang="de">Jeden Tab finden, statt zu suchen</span><span lang="en">Find any tab instead of hunting for it</span></h2>
+          <p><span lang="de">Strg+K durchsucht die offenen Tabs aller Spaces nach Titel und Adresse, auch mit Tippfehlern. Verlauf (Strg+H), Lesezeichen (Strg+Umschalt+O) und Downloads (Strg+J) lassen sich genauso durchsuchen.</span><span lang="en">Ctrl+K searches the open tabs of every space by title and address, typos included. History (Ctrl+H), bookmarks (Ctrl+Shift+O) and downloads (Ctrl+J) are just as searchable.</span></p>
+          <div class="keys"><span class="k-kbd"><kbd lang="de">Strg</kbd><kbd lang="en">Ctrl</kbd><kbd>K</kbd><span class="what"><span lang="de">Tabs durchsuchen</span><span lang="en">Search tabs</span></span></span></div>
+        </div>
+        <div class="media">
+          <div class="scene" data-w="600" style="max-width:600px" aria-hidden="true">
+            <div class="stage k-root" inert style="width:600px">
+              <div class="frame win" style="height:330px;position:relative">
+                <div class="win__page" style="margin-top:8px">
+                  <div class="pg__art"><span class="pg__line" style="width:50%;height:14px"></span><span class="pg__line" style="width:92%"></span><span class="pg__line" style="width:86%"></span><span class="pg__line" style="width:90%"></span><span class="pg__line" style="width:70%"></span></div>
+                </div>
+                <div class="scrim"></div>
+                <div class="k-overlay" style="position:absolute;left:30px;top:34px;width:540px">
+                  <div class="k-overlay__input"><i class="k-icon k-icon--lg k-muted" data-icon="search"></i><span class="typed"><span lang="de">jahres</span><span lang="en">annual</span><span class="caret"></span></span><span class="k-kbd"><kbd>Esc</kbd></span></div>
+                  <div class="k-overlay__list">
+                    <div class="k-suggest__group"><span lang="de">Offene Tabs</span><span lang="en">Open tabs</span></div>
+                    <div class="k-suggest__row is-selected"><span class="k-tab__fav n">B</span><div class="k-suggest__text"><span class="k-suggest__title"><span lang="de">Bundesanzeiger – <mark>Jahres</mark>abschluss 2025</span><span lang="en">Bundesanzeiger – <mark>annual</mark> accounts 2025</span></span><span class="k-suggest__url">bundesanzeiger.de</span></div><span class="space">💼 <span lang="de">Arbeit</span><span lang="en">Work</span></span></div>
+                    <div class="k-suggest__row"><span class="k-tab__fav a">E</span><div class="k-suggest__text"><span class="k-suggest__title"><span lang="de"><mark>Jahres</mark>steuererklärung – ELSTER</span><span lang="en"><mark>Annual</mark> tax return – ELSTER</span></span><span class="k-suggest__url">elster.de</span></div><span class="space">🏠 <span lang="de">Zuhause</span><span lang="en">Home</span></span></div>
+                  </div>
+                  <div class="k-overlay__foot"><span><span class="k-kbd"><kbd>↑</kbd><kbd>↓</kbd></span> <span lang="de">wählen</span><span lang="en">select</span></span><span><span class="k-kbd"><kbd>↵</kbd></span> <span lang="de">öffnen</span><span lang="en">open</span></span><span><span class="k-kbd"><kbd lang="de">Entf</kbd><kbd lang="en">Del</kbd></span> <span lang="de">schließen</span><span lang="en">close</span></span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4 Blocker and site settings -->
+      <section class="feature">
+        <div class="feature__text">
+          <span class="label-row"><span lang="de">Werbeblocker und Site-Einstellungen</span><span lang="en">Ad blocker and site settings</span></span>
+          <h2><span lang="de">Werbung und Tracker bleiben draußen</span><span lang="en">Ads and trackers stay out</span></h2>
+          <p><span lang="de">Der Werbeblocker ist eingebaut und arbeitet mit EasyList und EasyPrivacy. Ein Klick auf den gewählten Tab öffnet die Site-Einstellungen: die Verbindung, den Blocker für diese Site, Berechtigungen wie Kamera und Benachrichtigungen, den Zoom und das Löschen ihrer Daten.</span><span lang="en">The ad blocker is built in and works from EasyList and EasyPrivacy. A click on the selected tab opens Site Settings: the connection, the blocker for this site, permissions such as camera and notifications, zoom and clearing its data.</span></p>
+          <p><span lang="de">Ist eine Verbindung nicht sicher, steht das am Tab, auch wenn die Adresse gerade nicht zu sehen ist.</span><span lang="en">When a connection is not secure, the tab says so, even while the address is out of sight.</span></p>
+        </div>
+        <div class="media">
+          <div class="scene" data-w="600" style="max-width:600px" aria-hidden="true">
+            <div class="stage k-root" inert style="width:600px">
+              <div class="frame win" style="height:450px;position:relative">
+                <div class="k-strip">
+                  <span class="k-pin">M</span>
+                  <span class="sep"></span>
+                  <div class="k-strip__tabs k-tabs"><span class="k-tabs__pill"></span>
+                    <span class="k-tab is-selected"><span class="k-tab__fav n">B</span><span class="k-tab__title">Bundesanzeiger</span><i class="k-icon k-tab__close" data-icon="close"></i></span>
+                    <span class="k-tab"><span class="k-tab__fav m">W</span><span class="tab-warn"><i class="k-icon" data-icon="not-secure"></i><span lang="de">Nicht sicher</span><span lang="en">Not secure</span></span><span class="k-tab__title">wlan-login</span><i class="k-icon k-tab__close" data-icon="close"></i></span>
+                  </div>
+                  <span class="grow"></span>
+                  <div class="k-caption"><span class="k-iconbtn"><i class="k-icon" data-icon="minimize"></i></span><span class="k-iconbtn"><i class="k-icon" data-icon="maximize"></i></span><span class="k-iconbtn k-iconbtn--close"><i class="k-icon" data-icon="close"></i></span></div>
+                </div>
+                <div class="win__page">
+                  <div class="pg__site"><span class="pg__logo"></span><span class="pg__bar" style="width:110px"></span></div>
+                  <div class="pg__art" style="padding-left:380px"><span class="pg__line" style="width:100%;height:14px"></span><span class="pg__line" style="width:90%"></span><span class="pg__line" style="width:80%"></span><span class="pg__img"></span></div>
+                </div>
+                <div class="k-sitecard">
+                  <div><div class="k-sitecard__host">bundesanzeiger.de</div><div class="k-mono k-muted">https://www.bundesanzeiger.de/pub/</div></div>
+                  <div class="k-sitecard__line k-muted"><i class="k-icon" data-icon="secure"></i><span lang="de">Verbindung verschlüsselt</span><span lang="en">Connection encrypted</span></div>
+                  <div class="k-divider"></div>
+                  <span class="k-sitecard__opt"><i class="k-icon" data-icon="shield"></i><span><span lang="de">Werbeblocker</span><span lang="en">Ad blocker</span></span><span class="k-switch" aria-checked="true"></span></span>
+                  <span class="k-sitecard__opt"><i class="k-icon" data-icon="camera"></i><span><span lang="de">Kamera</span><span lang="en">Camera</span></span><span class="k-select"><span lang="de">Fragen</span><span lang="en">Ask</span><i class="k-icon" data-icon="chevron-down"></i></span></span>
+                  <span class="k-sitecard__opt"><i class="k-icon" data-icon="notifications"></i><span><span lang="de">Benachrichtigungen</span><span lang="en">Notifications</span></span><span class="k-select"><span lang="de">Blockieren</span><span lang="en">Block</span><i class="k-icon" data-icon="chevron-down"></i></span></span>
+                  <span class="k-sitecard__opt"><i class="k-icon" data-icon="zoom-in"></i><span>Zoom</span><span class="k-select">110 %</span></span>
+                  <div class="k-divider"></div>
+                  <span class="k-menu__item"><i class="k-icon" data-icon="hide"></i><span class="k-menu__label"><span lang="de">Versteckte Elemente</span><span lang="en">Hidden elements</span></span><span class="count">3</span></span>
+                  <span class="k-menu__item k-menu__item--danger"><i class="k-icon" data-icon="cookies"></i><span class="k-menu__label"><span lang="de">Daten dieser Website löschen</span><span lang="en">Clear this site's data</span></span></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 5 Hide element, reader -->
+      <section class="feature">
+        <div class="feature__text">
+          <span class="label-row"><span lang="de">Element verstecken und Lesemodus</span><span lang="en">Hide element and Reader</span></span>
+          <h2><span lang="de">Was stört, verschwindet</span><span lang="en">What bothers you goes away</span></h2>
+          <p><span lang="de">Element verstecken markiert, worauf die Maus zeigt, und ein Klick entfernt Banner, Hinweise und Kästen dauerhaft. Strg+Z holt sie zurück. Der Lesemodus zeigt nur den Artikel, gesetzt in einer Schrift für lange Texte.</span><span lang="en">Hide element marks whatever the pointer is on, and a click removes banners, notices and boxes for good. Ctrl+Z brings them back. Reader shows just the article, set in a typeface made for long reads.</span></p>
+          <div class="keys">
+            <span class="k-kbd"><kbd lang="de">Strg</kbd><kbd lang="en">Ctrl</kbd><kbd>⇧</kbd><kbd>H</kbd><span class="what"><span lang="de">Element verstecken</span><span lang="en">Hide element</span></span></span>
+            <span class="k-kbd"><kbd lang="de">Strg</kbd><kbd lang="en">Ctrl</kbd><kbd>⇧</kbd><kbd>R</kbd><span class="what"><span lang="de">Lesemodus</span><span lang="en">Reader</span></span></span>
+          </div>
+        </div>
+        <div class="media">
+          <div class="scene" data-w="600" style="max-width:600px" aria-hidden="true">
+            <div class="stage k-root" inert style="width:600px">
+              <div class="frame" style="height:250px;position:relative;background:var(--surface)">
+                <div style="padding:20px 24px;display:flex;flex-direction:column;gap:10px;max-width:540px">
+                  <span class="pg__line" style="width:60%;height:12px"></span>
+                  <div class="k-pick-target" style="border-radius:8px;padding:14px;display:flex;gap:10px;align-items:center;background:var(--surface-raised)"><span style="width:40px;height:40px;border-radius:8px;background:var(--surface-sunken)"></span><div><b><span lang="de">Newsletter abonnieren</span><span lang="en">Subscribe to our newsletter</span></b><div class="k-muted"><span lang="de">Jetzt 10 % sparen</span><span lang="en">Save 10 % now</span></div></div></div>
+                  <span class="k-pick-label" style="align-self:flex-start"><span lang="de">Hinweis-Box</span><span lang="en">Notice box</span> <code>div.newsletter-cta</code></span>
+                  <span class="pg__line" style="width:80%;height:12px"></span>
+                </div>
+                <div style="position:absolute;left:50%;bottom:14px;transform:translateX(-50%);white-space:nowrap"><span class="k-hint"><i class="k-icon" data-icon="pick"></i><span lang="de">Klick versteckt</span><span lang="en">Click hides</span> · <span class="k-kbd"><kbd lang="de">Strg</kbd><kbd lang="en">Ctrl</kbd><kbd>Z</kbd></span> <span lang="de">rückgängig</span><span lang="en">undo</span> · <span class="k-kbd"><kbd>Esc</kbd></span> <span lang="de">fertig</span><span lang="en">done</span></span></div>
+              </div>
+            </div>
+          </div>
+          <div class="scene" data-w="600" style="max-width:600px" aria-hidden="true">
+            <div class="stage k-root" inert style="width:600px">
+              <div class="frame" style="height:300px;background:var(--surface)">
+                <article class="k-reader" style="padding:28px 40px 0">
+                  <p class="k-reader__meta"><span lang="de">Essay · 6 Min. Lesezeit</span><span lang="en">Essay · 6 min read</span></p>
+                  <h1><span lang="de">Die Kante des Fensters</span><span lang="en">The edge of the window</span></h1>
+                  <p><span lang="de">Der Lesemodus nimmt der Seite ihre Spalten, Banner und Empfehlungen und setzt den Artikel in eine Schrift, die für lange Strecken gemacht ist.</span><span lang="en">Reader takes the page's columns, banners and recommendations away and sets the article in a typeface made for long stretches.</span></p>
+                  <blockquote><span lang="de">Gute Werkzeuge verschwinden, sobald man sie benutzt.</span><span lang="en">Good tools disappear as soon as you use them.</span></blockquote>
+                </article>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 6 Floating video -->
+      <section class="feature">
+        <div class="feature__text">
+          <span class="label-row"><span lang="de">Video schweben lassen</span><span lang="en">Float video</span></span>
+          <h2><span lang="de">Das Video läuft weiter, wo du willst</span><span lang="en">The video keeps playing where you want it</span></h2>
+          <p><span lang="de">Video schweben lassen löst das Video aus der Seite und spielt es in einem kleinen Fenster über allen anderen weiter. Ein Klick bringt es zurück in seinen Tab.</span><span lang="en">Float video lifts the video out of the page and keeps it playing in a small window above all others. One click puts it back in its tab.</span></p>
+          <div class="keys"><span class="k-kbd"><kbd lang="de">Strg</kbd><kbd lang="en">Ctrl</kbd><kbd>⇧</kbd><kbd>P</kbd><span class="what"><span lang="de">Video schweben lassen</span><span lang="en">Float video</span></span></span></div>
+        </div>
+        <div class="media">
+          <div class="scene" data-w="600" style="max-width:600px" aria-hidden="true">
+            <div class="stage k-root" inert style="width:600px">
+              <div class="frame" style="height:340px">
+                <div class="desk">
+                  <div class="desk__win"><div class="head"><i></i><i style="width:24px"></i></div><div class="body"><span class="pg__line" style="width:70%;height:12px"></span><span class="pg__line" style="width:92%"></span><span class="pg__line" style="width:84%"></span><span class="pg__line" style="width:88%"></span><span class="pg__line" style="width:60%"></span></div></div>
+                  <div class="k-float is-hot">
+                    <div class="k-float__video"></div>
+                    <span class="k-iconbtn k-float__return"><i class="k-icon" data-icon="return"></i></span>
+                    <div class="k-float__bar"><span class="k-iconbtn"><i class="k-icon k-icon--lg" data-icon="skip-back"></i></span><span class="k-iconbtn"><i class="k-icon k-icon--lg" data-icon="pause"></i></span><span class="k-iconbtn"><i class="k-icon k-icon--lg" data-icon="skip-forward"></i></span></div>
+                    <span class="k-float__progress" style="width:38%"></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+  <section class="band">
+    <div class="wrap">
+      <h2><span lang="de">Außerdem dabei</span><span lang="en">Also on board</span></h2>
+      <div class="grid">
+        <div class="card"><i class="k-icon" data-icon="private"></i><h3><span lang="de">Private Tabs</span><span lang="en">Private tabs</span></h3><p><span lang="de">Ohne Verlauf und ohne Sitzung, erkennbar am violetten Rahmen.</span><span lang="en">No history and no session, marked by a violet border.</span></p><span class="k-kbd"><kbd lang="de">Strg</kbd><kbd lang="en">Ctrl</kbd><kbd>⇧</kbd><kbd>N</kbd></span></div>
+        <div class="card"><i class="k-icon" data-icon="passwords"></i><h3><span lang="de">1Password und Erweiterungen</span><span lang="en">1Password and extensions</span></h3><p><span lang="de">1Password mit einem Kürzel, dazu andere Erweiterungen aus dem Chrome Web Store.</span><span lang="en">1Password with one shortcut, plus other extensions from the Chrome Web Store.</span></p><span class="k-kbd"><kbd lang="de">Strg</kbd><kbd lang="en">Ctrl</kbd><kbd>⇧</kbd><kbd>L</kbd></span></div>
+        <div class="card"><i class="k-icon" data-icon="download"></i><h3><span lang="de">Herüberholen</span><span lang="en">Bring things over</span></h3><p><span lang="de">Lesezeichen, Verlauf und offene Tabs aus Chrome, Edge, Brave, Firefox, Zen und Arc.</span><span lang="en">Bookmarks, history and open tabs from Chrome, Edge, Brave, Firefox, Zen and Arc.</span></p></div>
+        <div class="card"><i class="k-icon" data-icon="folder"></i><h3><span lang="de">Abgleich über einen Ordner</span><span lang="en">Sync through a folder</span></h3><p><span lang="de">Spaces, Pins und Lesezeichen auf mehreren Computern gleich, ohne Konto.</span><span lang="en">Spaces, pins and bookmarks the same on several computers, with no account.</span></p></div>
+        <div class="card"><i class="k-icon" data-icon="return"></i><h3><span lang="de">Sitzung sofort zurück</span><span lang="en">Session back at once</span></h3><p><span lang="de">Nach dem Start ist alles wieder da. Geschlossene Tabs kommen mit Zurück-Liste und Scrollposition zurück.</span><span lang="en">After the start everything is back. Closed tabs return with their back list and scroll position.</span></p><span class="k-kbd"><kbd lang="de">Strg</kbd><kbd lang="en">Ctrl</kbd><kbd>⇧</kbd><kbd>T</kbd></span></div>
+        <div class="card"><i class="k-icon" data-icon="sleep"></i><h3><span lang="de">Schlafende Tabs</span><span lang="en">Sleeping tabs</span></h3><p><span lang="de">Tabs, die du länger nicht ansiehst, schlafen und geben Speicher frei.</span><span lang="en">Tabs you have not looked at for a while sleep and free their memory.</span></p></div>
+        <div class="card"><i class="k-icon" data-icon="split"></i><h3><span lang="de">Nebeneinander und in Gruppen</span><span lang="en">Side by side and in groups</span></h3><p><span lang="de">Zwei Tabs nebeneinander in einem Fenster, Tabs in Gruppen geordnet.</span><span lang="en">Two tabs side by side in one window, tabs sorted into groups.</span></p></div>
+        <div class="card"><i class="k-icon" data-icon="settings"></i><h3><span lang="de">Jedes Kürzel umbelegbar</span><span lang="en">Every shortcut rebindable</span></h3><p><span lang="de">Ein neuer Tab zeigt alle Kürzel, die Einstellungen ändern jedes davon.</span><span lang="en">A new tab shows every shortcut, and Settings change any of them.</span></p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="wrap trust">
+    <div>
+      <h2><span lang="de">Ohne Konto, ohne Telemetrie</span><span lang="en">No account, no telemetry</span></h2>
+    </div>
+    <ul>
+      <li><i class="k-icon" data-icon="site"></i><div><b><span lang="de">Nur die Verbindungen, die du willst</span><span lang="en">Only the connections you want</span></b><span class="t"><span lang="de">kante verbindet sich für die Seiten, die du öffnest, ihre Favicons und die Suche nach Updates. Keine Telemetrie, keine Absturzberichte nach außen.</span><span lang="en">kante connects for the pages you open, their favicons and the update check. No telemetry, no crash reports sent anywhere.</span></span></div></li>
+      <li><i class="k-icon" data-icon="secure"></i><div><b><span lang="de">Signierte Updates</span><span lang="en">Signed updates</span></b><span class="t"><span lang="de">Updates kommen von selbst. Jedes ist signiert, und kante prüft Signatur und Prüfsumme, bevor es etwas ersetzt. Nach einem Update zeigt kante, was neu ist.</span><span lang="en">Updates arrive on their own. Each is signed, and kante checks signature and checksum before it replaces anything. After an update kante shows what is new.</span></span></div></li>
+      <li><i class="k-icon" data-icon="download"></i><div><b><span lang="de">Installiert für dich allein</span><span lang="en">Installed just for you</span></b><span class="t"><span lang="de">Der Installer legt kante für deinen Benutzer an, ohne Administratorrechte, und deinstalliert es genauso.</span><span lang="en">The installer sets kante up for your user, without administrator rights, and removes it the same way.</span></span></div></li>
+      <li><i class="k-icon" data-icon="shield"></i><div><b><span lang="de">Die Engine von Windows</span><span lang="en">The engine Windows ships</span></b><span class="t"><span lang="de">Die Seiten zeigt Microsoft Edge WebView2, das Windows selbst aktuell hält, samt Sicherheitsupdates.</span><span lang="en">Pages are shown by Microsoft Edge WebView2, which Windows keeps up to date, security updates included.</span></span></div></li>
+    </ul>
+  </section>
+
+  <section class="end">
+    <div class="wrap">
+      <img src="design/kante-icon.svg" alt="" width="72" height="72">
+      <h2><span lang="de">kante ausprobieren</span><span lang="en">Try kante</span></h2>
+      <div class="get-row">
+        <a class="k-btn k-btn--primary get" href="https://github.com/vanozoda/kante-release/releases/download/v0.2.0/kante-setup-0.2.0.exe"><i class="k-icon" data-icon="download"></i><span lang="de">kante herunterladen</span><span lang="en">Download kante</span></a>
+        <span class="meta"><span lang="de">Version 0.2.0 · Windows 11, 64 Bit · ohne Administratorrechte</span><span lang="en">Version 0.2.0 · Windows 11, 64-bit · no administrator rights</span></span>
+      </div>
+      <footer>
+        <a href="https://github.com/vanozoda/kante-release/releases/tag/v0.2.0"><span lang="de">Neu in 0.2.0</span><span lang="en">New in 0.2.0</span></a>
+        <a href="https://github.com/vanozoda/kante-release/releases"><span lang="de">Alle Versionen</span><span lang="en">All versions</span></a>
+        <a href="https://github.com/vanozoda/kante-release/issues"><span lang="de">Fehler melden</span><span lang="en">Report a bug</span></a>
+        <a href="https://github.com/vanozoda/kante-release/blob/HEAD/SECURITY.md"><span lang="de">Sicherheitslücke melden</span><span lang="en">Report a vulnerability</span></a>
+      </footer>
+    </div>
+  </section>
 </main>
+
+<script src="design/kante.js"></script>
+<script>
+  (function () {
+    var h = document.documentElement;
+    var titles = { de: 'kante – ein Browser für Windows 11', en: 'kante – a browser for Windows 11' };
+    function glideAll() {
+      document.querySelectorAll('.stage .k-tabs').forEach(function (list) {
+        var t = list.querySelector('.k-tab.is-selected');
+        if (t && window.Kante) Kante.glide(list, t, true);
+      });
+    }
+    // Each scene is drawn at app size and scaled as a whole to its column.
+    function fit() {
+      document.querySelectorAll('.scene').forEach(function (s) {
+        var st = s.firstElementChild, w = +s.getAttribute('data-w');
+        var k = Math.min(1, s.clientWidth / w);
+        st.style.transform = k < 1 ? 'scale(' + k + ')' : '';
+        s.style.height = Math.ceil(st.offsetHeight * k) + 'px';
+      });
+    }
+    function setLang(l, keep) {
+      h.dataset.lang = l; h.lang = l; document.title = titles[l];
+      document.querySelectorAll('[data-set-lang]').forEach(function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-set-lang') === l)); });
+      if (keep) { try { localStorage.setItem('kante.lang', l); } catch (e) {} }
+      glideAll(); fit();
+    }
+    document.querySelectorAll('[data-set-lang]').forEach(function (b) {
+      b.addEventListener('click', function () { setLang(b.getAttribute('data-set-lang'), true); });
+    });
+    if (window.Kante) Kante.hydrate(document);
+    setLang(h.dataset.lang === 'en' ? 'en' : 'de', false);
+    window.addEventListener('resize', fit);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { glideAll(); fit(); });
+  })();
+</script>
 </body>
 </html>
