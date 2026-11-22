@@ -8,7 +8,7 @@
 <link rel="icon" href="favicon.ico" sizes="any">
 <link rel="icon" href="design/kante-icon.svg" type="image/svg+xml">
 <!-- The Pages site under kante.vanozoda.com (DECISIONS.md D-023). cargo xtask
-     publish writes it with every release: 0.2.0 and https://github.com/vanozoda/kante-release/releases/download/v0.2.0/kante-setup-0.2.0.exe become the
+     publish writes it with every release: 0.3.0 and https://github.com/vanozoda/kante-release/releases/download/v0.3.0/kante-setup-0.3.0.exe become the
      version and its installer, the design/ files come from shell/design.
      Every picture is a scene built from the design package's components. -->
 <script>
@@ -79,10 +79,10 @@
   .stage span { cursor: default; }
   .frame { border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-float); }
 
-  /* the window: bar, then the page card */
+  /* the window: the bar, the page under it edge to edge (D-024) */
   .win { display: flex; flex-direction: column; background: var(--chrome); }
-  .win > .k-strip { flex: none; }
-  .win__page { flex: 1; margin: 0 var(--space-2) var(--space-2); border-radius: var(--radius-xl); background: var(--surface); box-shadow: var(--shadow-page); overflow: hidden; position: relative; }
+  .win > .k-strip { flex: none; box-shadow: inset 0 -1px 0 var(--line); }
+  .win__page { flex: 1; background: var(--surface); overflow: hidden; position: relative; }
   .k-strip .k-strip__tabs { flex: 0 1 auto; }
   .k-strip .grow { flex: 1 1 auto; min-width: var(--space-4); }
   .k-strip .sep { width: 1px; height: 18px; background: var(--line); margin: 0 4px; flex: none; }
@@ -113,9 +113,9 @@
   .pg__p { font-size: 15px; line-height: 24px; color: var(--ink); }
   .pg__img { height: 120px; border-radius: var(--radius-lg); background: linear-gradient(135deg, var(--highlight), var(--surface-sunken)); }
 
-  /* folded: the page takes the window, the bar slides over its top */
+  /* the page takes the window, the bar comes in over its top */
   .fold { position: relative; height: 100%; background: var(--surface); }
-  .fold .k-strip { position: absolute; left: 0; right: 0; top: 0; border-radius: 0 0 var(--radius-xl) var(--radius-xl); box-shadow: var(--shadow-float); }
+  .fold .k-strip { position: absolute; left: 0; right: 0; top: 0; box-shadow: inset 0 -1px 0 var(--line); }
   .fold .pg__art { padding-top: 72px; }
   .fold__hint { position: absolute; left: 50%; bottom: var(--space-4); transform: translateX(-50%); white-space: nowrap; }
 
@@ -237,7 +237,7 @@
     <nav class="langs" aria-label="Sprache · Language">
       <button type="button" data-set-lang="de" aria-pressed="true" title="Deutsch">DE</button><button type="button" data-set-lang="en" aria-pressed="false" title="English">EN</button>
     </nav>
-    <a class="k-btn k-btn--secondary get-sm" href="https://github.com/vanozoda/kante-release/releases/download/v0.2.0/kante-setup-0.2.0.exe"><i class="k-icon" data-icon="download"></i><span class="lbl"><span lang="de">Herunterladen</span><span lang="en">Download</span></span></a>
+    <a class="k-btn k-btn--secondary get-sm" href="https://github.com/vanozoda/kante-release/releases/download/v0.3.0/kante-setup-0.3.0.exe"><i class="k-icon" data-icon="download"></i><span class="lbl"><span lang="de">Herunterladen</span><span lang="en">Download</span></span></a>
   </header>
 
   <div class="wrap">
@@ -248,8 +248,8 @@
         <span lang="en">A browser for Windows 11 that stays out of the way: one bar with your tabs at the top, the page below it. Nothing else.</span>
       </p>
       <div class="get-row">
-        <a class="k-btn k-btn--primary get" href="https://github.com/vanozoda/kante-release/releases/download/v0.2.0/kante-setup-0.2.0.exe"><i class="k-icon" data-icon="download"></i><span lang="de">kante herunterladen</span><span lang="en">Download kante</span></a>
-        <span class="meta"><span lang="de">Version 0.2.0 · Windows 11, 64 Bit · ohne Administratorrechte</span><span lang="en">Version 0.2.0 · Windows 11, 64-bit · no administrator rights</span></span>
+        <a class="k-btn k-btn--primary get" href="https://github.com/vanozoda/kante-release/releases/download/v0.3.0/kante-setup-0.3.0.exe"><i class="k-icon" data-icon="download"></i><span lang="de">kante herunterladen</span><span lang="en">Download kante</span></a>
+        <span class="meta"><span lang="de">Version 0.3.0 · Windows 11, 64 Bit · ohne Administratorrechte</span><span lang="en">Version 0.3.0 · Windows 11, 64-bit · no administrator rights</span></span>
       </div>
     </div>
 
@@ -258,6 +258,7 @@
       <div class="stage k-root" inert style="width:1040px">
         <div class="win frame" style="height:560px">
           <div class="k-strip">
+            <span class="k-iconbtn"><i class="k-icon" data-icon="back"></i></span><span class="k-iconbtn"><i class="k-icon" data-icon="reload"></i></span><span class="sep"></span>
             <span class="k-pin">M</span><span class="k-pin">K</span>
             <span class="sep"></span>
             <div class="k-strip__tabs k-tabs"><span class="k-tabs__pill"></span>
@@ -299,9 +300,9 @@
       <section class="feature">
         <div class="feature__text">
           <span class="label-row"><span lang="de">Die Leiste</span><span lang="en">The bar</span></span>
-          <h2><span lang="de">Eine Leiste, dann die Seite</span><span lang="en">One bar, then the page</span></h2>
-          <p><span lang="de">Keine Toolbar, keine Startseite, keine Statusleiste. Tabs, angeheftete Seiten und Spaces teilen sich eine Leiste oben. Strg+S klappt sie ein, dann gehört das ganze Fenster der Seite. Ruht die Maus am oberen Rand, gleitet die Leiste wieder herein.</span><span lang="en">No toolbar, no start page, no status bar. Tabs, pinned sites and spaces share one bar at the top. Ctrl+S folds it away and the whole window belongs to the page. Rest the pointer at the top edge and the bar slides back in.</span></p>
-          <div class="keys"><span class="k-kbd"><kbd lang="de">Strg</kbd><kbd lang="en">Ctrl</kbd><kbd>S</kbd><span class="what"><span lang="de">Leiste einklappen</span><span lang="en">Fold the bar</span></span></span></div>
+          <h2><span lang="de">Die Seite, bis an den Rand</span><span lang="en">The page, edge to edge</span></h2>
+          <p><span lang="de">Keine Toolbar, keine Startseite, keine Statusleiste. Das ganze Fenster gehört der Seite. Zurück und Vor, Tabs, angeheftete Seiten und Spaces teilen sich eine Leiste, und die ist sofort da, sobald die Maus an den oberen Rand kommt. Steht die Seite ganz oben, rückt sie dafür ein Stück nach unten.</span><span lang="en">No toolbar, no start page, no status bar. The whole window belongs to the page. Back and forward, tabs, pinned sites and spaces share one bar, and it is there the moment the pointer reaches the top edge. When the page is at its very top, it moves down to make room.</span></p>
+          <div class="keys"><span class="k-kbd"><kbd lang="de">Strg</kbd><kbd lang="en">Ctrl</kbd><kbd>L</kbd><span class="what"><span lang="de">Adressfeld</span><span lang="en">Address field</span></span></span></div>
         </div>
         <div class="media">
           <div class="scene" data-w="600" style="max-width:600px" aria-hidden="true">
@@ -314,6 +315,7 @@
                     <span class="pg__line" style="width:94%"></span><span class="pg__line" style="width:86%"></span><span class="pg__line" style="width:90%"></span><span class="pg__line" style="width:62%"></span>
                   </div>
                   <div class="k-strip">
+                    <span class="k-iconbtn"><i class="k-icon" data-icon="back"></i></span><span class="k-iconbtn"><i class="k-icon" data-icon="reload"></i></span><span class="sep"></span>
                     <div class="k-strip__tabs k-tabs"><span class="k-tabs__pill"></span>
                       <span class="k-tab is-selected"><span class="k-tab__fav n">E</span><span class="k-tab__title"><span lang="de">Die Kante des Fensters</span><span lang="en">The edge of the window</span></span><i class="k-icon k-tab__close" data-icon="close"></i></span>
                       <span class="k-tab"><span class="k-tab__fav a">P</span><span class="k-tab__title"><span lang="de">Posteingang</span><span lang="en">Inbox</span></span><i class="k-icon k-tab__close" data-icon="close"></i></span>
@@ -322,7 +324,7 @@
                     <div class="sp"><span class="k-space is-active"><span class="face">🏠</span></span><span class="k-space"><span class="face">💼</span></span></div>
                     <div class="k-caption"><span class="k-iconbtn"><i class="k-icon" data-icon="minimize"></i></span><span class="k-iconbtn"><i class="k-icon" data-icon="maximize"></i></span><span class="k-iconbtn k-iconbtn--close"><i class="k-icon" data-icon="close"></i></span></div>
                   </div>
-                  <div class="fold__hint"><span class="k-hint"><i class="k-icon" data-icon="unfold"></i><span lang="de">Eingeklappt: Maus an den oberen Rand</span><span lang="en">Folded: pointer to the top edge</span></span></div>
+                  <div class="fold__hint"><span class="k-hint"><i class="k-icon" data-icon="unfold"></i><span lang="de">Maus an den oberen Rand: die Leiste ist da</span><span lang="en">Pointer to the top edge: the bar is there</span></span></div>
                 </div>
               </div>
             </div>
@@ -343,6 +345,7 @@
             <div class="stage k-root" inert style="width:600px">
               <div class="frame win" style="height:470px;position:relative">
                 <div class="k-strip">
+                  <span class="k-iconbtn"><i class="k-icon" data-icon="back"></i></span><span class="k-iconbtn"><i class="k-icon" data-icon="reload"></i></span><span class="sep"></span>
                   <div class="k-strip__tabs k-tabs"><span class="k-tabs__pill"></span>
                     <span class="k-tab is-selected"><span class="k-tab__fav i">B</span><span class="k-tab__title"><span lang="de">Bahn: Köln – Lissabon</span><span lang="en">Rail: Cologne – Lisbon</span></span><i class="k-icon k-tab__close" data-icon="close"></i></span>
                   </div>
@@ -418,6 +421,7 @@
             <div class="stage k-root" inert style="width:600px">
               <div class="frame win" style="height:450px;position:relative">
                 <div class="k-strip">
+                  <span class="k-iconbtn"><i class="k-icon" data-icon="back"></i></span><span class="k-iconbtn"><i class="k-icon" data-icon="reload"></i></span><span class="sep"></span>
                   <span class="k-pin">M</span>
                   <span class="sep"></span>
                   <div class="k-strip__tabs k-tabs"><span class="k-tabs__pill"></span>
@@ -552,11 +556,11 @@
       <img src="design/kante-icon.svg" alt="" width="72" height="72">
       <h2><span lang="de">kante ausprobieren</span><span lang="en">Try kante</span></h2>
       <div class="get-row">
-        <a class="k-btn k-btn--primary get" href="https://github.com/vanozoda/kante-release/releases/download/v0.2.0/kante-setup-0.2.0.exe"><i class="k-icon" data-icon="download"></i><span lang="de">kante herunterladen</span><span lang="en">Download kante</span></a>
-        <span class="meta"><span lang="de">Version 0.2.0 · Windows 11, 64 Bit · ohne Administratorrechte</span><span lang="en">Version 0.2.0 · Windows 11, 64-bit · no administrator rights</span></span>
+        <a class="k-btn k-btn--primary get" href="https://github.com/vanozoda/kante-release/releases/download/v0.3.0/kante-setup-0.3.0.exe"><i class="k-icon" data-icon="download"></i><span lang="de">kante herunterladen</span><span lang="en">Download kante</span></a>
+        <span class="meta"><span lang="de">Version 0.3.0 · Windows 11, 64 Bit · ohne Administratorrechte</span><span lang="en">Version 0.3.0 · Windows 11, 64-bit · no administrator rights</span></span>
       </div>
       <footer>
-        <a href="https://github.com/vanozoda/kante-release/releases/tag/v0.2.0"><span lang="de">Neu in 0.2.0</span><span lang="en">New in 0.2.0</span></a>
+        <a href="https://github.com/vanozoda/kante-release/releases/tag/v0.3.0"><span lang="de">Neu in 0.3.0</span><span lang="en">New in 0.3.0</span></a>
         <a href="https://github.com/vanozoda/kante-release/releases"><span lang="de">Alle Versionen</span><span lang="en">All versions</span></a>
         <a href="https://github.com/vanozoda/kante-release/issues"><span lang="de">Fehler melden</span><span lang="en">Report a bug</span></a>
         <a href="https://github.com/vanozoda/kante-release/blob/HEAD/SECURITY.md"><span lang="de">Sicherheitslücke melden</span><span lang="en">Report a vulnerability</span></a>
