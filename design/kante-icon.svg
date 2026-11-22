@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <title>kante</title>
+  <defs>
+    <clipPath id="kante-plate"><rect x="8" y="8" width="240" height="240" rx="56"/></clipPath>
+    <linearGradient id="kante-teal" x1="0" y1="0" x2="0.35" y2="1"><stop offset="0" stop-color="#6EF0DC"/><stop offset="1" stop-color="#14A99A"/></linearGradient>
+    <linearGradient id="kante-night" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1E2D63"/><stop offset="0.55" stop-color="#121D45"/><stop offset="1" stop-color="#0A112E"/></linearGradient>
+    <radialGradient id="kante-moon" cx="236" cy="18" r="150" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#6F8CFF" stop-opacity="0.42"/><stop offset="0.6" stop-color="#6F8CFF" stop-opacity="0.06"/><stop offset="1" stop-color="#6F8CFF" stop-opacity="0"/></radialGradient>
+    <linearGradient id="kante-sheen" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF" stop-opacity="0.2"/><stop offset="0.42" stop-color="#FFFFFF" stop-opacity="0"/></linearGradient>
+  </defs>
+  <g clip-path="url(#kante-plate)">
+    <path d="M0 0 H98 L70 256 H0 Z" fill="url(#kante-teal)"/>
+    <path d="M112 0 H256 V256 H84 Z" fill="url(#kante-night)"/>
+    <path d="M112 0 H256 V256 H84 Z" fill="url(#kante-moon)"/>
+    <path d="M0 0 H98 L70 256 H0 Z" fill="url(#kante-sheen)"/>
+    <path d="M112 0 H256 V256 H84 Z" fill="url(#kante-sheen)" opacity="0.6"/>
+  </g>
+  <rect x="8.75" y="8.75" width="238.5" height="238.5" rx="55.25" fill="none" stroke="#FFFFFF" stroke-opacity="0.14" stroke-width="1.5"/>
+</svg>
