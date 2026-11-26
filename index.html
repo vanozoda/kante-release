@@ -4,11 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>kante – ein Browser für Windows 11</title>
-<meta name="description" content="kante, ein schlanker Browser für Windows 11: eine Leiste mit Tabs, darunter die Seite. Spaces, Tab-Suche, Werbeblocker, Lesemodus, schwebendes Video. Ohne Konto, ohne Telemetrie.">
+<meta name="description" content="kante, ein schlanker Browser für Windows 11: links die Tabs, oben die Adresse, dazwischen die Seite. Spaces, Tab-Suche, Werbeblocker, Lesemodus, schwebendes Video. Ohne Konto, ohne Telemetrie.">
 <link rel="icon" href="favicon.ico" sizes="any">
 <link rel="icon" href="design/kante-icon.svg" type="image/svg+xml">
 <!-- The Pages site under kante.vanozoda.com (DECISIONS.md D-023). cargo xtask
-     publish writes it with every release: 0.4.0 and https://github.com/vanozoda/kante-release/releases/download/v0.4.0/kante-setup-0.4.0.exe become the
+     publish writes it with every release: 0.5.0 and https://github.com/vanozoda/kante-release/releases/download/v0.5.0/kante-setup-0.5.0.exe become the
      version and its installer, the design/ files come from shell/design.
      Every picture is a scene built from the design package's components. -->
 <script>
@@ -79,11 +79,27 @@
   .stage span { cursor: default; }
   .frame { border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-float); }
 
-  /* the window: the bar, the page under it edge to edge (D-024) */
-  .win { display: flex; flex-direction: column; background: var(--chrome); }
-  .win > .k-strip { flex: none; box-shadow: inset 0 -1px 0 var(--line); }
+  /* the window: the column on the left, folded to the favicons or wide over
+     the page; the bar over the page at its top (D-027) */
+  .win { display: flex; flex-direction: row; background: var(--chrome); position: relative; }
+  .win__main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .win__main > .k-strip { flex: none; padding-left: var(--space-2); gap: var(--space-2); box-shadow: inset 0 -1px 0 var(--line); }
   .win__page { flex: 1; background: var(--surface); overflow: hidden; position: relative; }
-  .k-strip .k-strip__tabs { flex: 0 1 auto; }
+  .win__gap { flex: none; width: 52px; }
+  .col { flex: none; width: 52px; display: flex; flex-direction: column; gap: 2px; padding: 40px 4px 8px; overflow: hidden; background: var(--chrome); box-shadow: inset -1px 0 0 var(--line); }
+  .col.is-over { position: absolute; left: 0; top: 0; bottom: 0; z-index: 2; width: 248px; box-shadow: var(--shadow-popover); }
+  .col .k-tabs { gap: 2px; }
+  .col .k-tabs__pill { top: 0; }
+  .col .k-tab, .col .k-pin { flex: none; display: flex; align-items: center; gap: var(--space-2); width: 100%; height: 32px; min-height: 0; padding: 0 var(--space-2) 0 14px; white-space: nowrap; }
+  .col .k-pin { border-radius: var(--radius-md); background: transparent; box-shadow: none; font: inherit; }
+  .col .k-tab__title, .col .k-pin__title { flex: 1; min-width: 0; overflow: hidden; -webkit-mask-image: linear-gradient(90deg, rgb(0 0 0 / 1) 82%, transparent); mask-image: linear-gradient(90deg, rgb(0 0 0 / 1) 82%, transparent); }
+  .col .pinface { width: 16px; height: 16px; flex: none; display: grid; place-items: center; border-radius: var(--radius-xs); background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); font: 600 10px/1 var(--font-sans); }
+  .col .pins { display: flex; flex-direction: column; gap: 2px; padding-bottom: var(--space-2); margin-bottom: var(--space-1); border-bottom: 1px solid var(--line); }
+  .col .newtab { color: var(--ink-muted); }
+  .col .foot { margin-top: auto; padding-left: 8px; }
+  .col .k-tab .k-icon:not(.k-tab__close) { color: var(--ink-muted); flex: none; }
+  .col .k-tab .tab-warn .k-icon { color: var(--danger); }
+  .k-strip .k-field { flex: 0 1 300px; min-width: 0; }
   .k-strip .grow { flex: 1 1 auto; min-width: var(--space-4); }
   .k-strip .sep { width: 1px; height: 18px; background: var(--line); margin: 0 4px; flex: none; }
   .k-strip > .k-iconbtn, .doors .k-iconbtn { flex: none; }
@@ -94,7 +110,7 @@
   .k-tab__fav.m { background: var(--line-strong); color: var(--chrome); }
   .k-tab .tab-warn { display: inline-flex; align-items: center; gap: 4px; color: var(--danger); font-weight: 560; flex: none; }
 
-  /* spaces in the bar (D-022), as the Shell draws them */
+  /* spaces at the column's foot (D-022, D-027), as the Shell draws them */
   .sp { display: flex; align-items: center; gap: 2px; flex: none; }
   .sp .k-space { position: relative; display: grid; place-items: center; width: 28px; height: 28px; border-radius: var(--radius-sm); }
   .sp .face { font-size: 16px; line-height: 1; opacity: 0.45; filter: grayscale(0.7); }
@@ -113,14 +129,11 @@
   .pg__p { font-size: 15px; line-height: 24px; color: var(--ink); }
   .pg__img { height: 120px; border-radius: var(--radius-lg); background: linear-gradient(135deg, var(--highlight), var(--surface-sunken)); }
 
-  /* the page takes the window, the bar comes in over its top */
-  .fold { position: relative; height: 100%; background: var(--surface); }
-  .fold .k-strip { position: absolute; left: 0; right: 0; top: 0; box-shadow: inset 0 -1px 0 var(--line); }
-  .fold .pg__art { padding-top: 72px; }
-  .fold__hint { position: absolute; left: 50%; bottom: var(--space-4); transform: translateX(-50%); white-space: nowrap; }
+  /* the column wide over the page while the pointer rests on it */
+  .fold__hint { position: absolute; left: calc(50% + 126px); bottom: var(--space-4); transform: translateX(-50%); white-space: nowrap; z-index: 3; }
 
-  /* a space's card under the + */
-  .spacecard { position: absolute; right: 150px; top: 46px; width: 320px; display: flex; flex-direction: column; gap: var(--space-3); padding: var(--space-4); border-radius: var(--radius-lg); background: var(--surface-raised); box-shadow: var(--shadow-popover); }
+  /* a space's card over the + at the column's foot */
+  .spacecard { position: absolute; z-index: 3; left: 12px; bottom: 48px; width: 320px; display: flex; flex-direction: column; gap: var(--space-3); padding: var(--space-4); border-radius: var(--radius-lg); background: var(--surface-raised); box-shadow: var(--shadow-popover); }
   .spacecard .k-panel__title { margin: 0; }
   .spacecard .k-input { justify-content: flex-start; }
   .spacecard .caret { width: 1.5px; height: 16px; background: var(--accent-ink); margin-left: -6px; }
@@ -140,8 +153,8 @@
   .k-overlay__input .caret { width: 1.5px; height: 20px; background: var(--accent-ink); margin-left: 1px; }
   .k-suggest__row .space { flex: none; font-size: 12px; color: var(--ink-muted); }
 
-  /* the site card under the selected tab */
-  .k-sitecard { position: absolute; left: 76px; top: 46px; }
+  /* the site card beside the column, at the selected tab */
+  .k-sitecard { position: absolute; z-index: 3; left: 254px; top: 70px; }
   .k-select { display: inline-flex; align-items: center; gap: 4px; }
   .k-sitecard__opt .k-switch, .k-sitecard__opt .k-select, .k-sitecard__opt .k-select span { flex: none; }
   .k-select .k-icon { width: 12px; height: 12px; }
@@ -237,38 +250,42 @@
     <nav class="langs" aria-label="Sprache · Language">
       <button type="button" data-set-lang="de" aria-pressed="true" title="Deutsch">DE</button><button type="button" data-set-lang="en" aria-pressed="false" title="English">EN</button>
     </nav>
-    <a class="k-btn k-btn--secondary get-sm" href="https://github.com/vanozoda/kante-release/releases/download/v0.4.0/kante-setup-0.4.0.exe"><i class="k-icon" data-icon="download"></i><span class="lbl"><span lang="de">Herunterladen</span><span lang="en">Download</span></span></a>
+    <a class="k-btn k-btn--secondary get-sm" href="https://github.com/vanozoda/kante-release/releases/download/v0.5.0/kante-setup-0.5.0.exe"><i class="k-icon" data-icon="download"></i><span class="lbl"><span lang="de">Herunterladen</span><span lang="en">Download</span></span></a>
   </header>
 
   <div class="wrap">
     <div class="hero__text">
       <h1 class="hero__name">kante</h1>
       <p class="hero__lead">
-        <span lang="de">Ein Browser für Windows 11, der aus dem Weg geht: oben eine Leiste mit deinen Tabs, darunter die Seite. Sonst nichts.</span>
-        <span lang="en">A browser for Windows 11 that stays out of the way: one bar with your tabs at the top, the page below it. Nothing else.</span>
+        <span lang="de">Ein Browser für Windows 11, der aus dem Weg geht: links deine Tabs, schmal wie ihre Symbole, oben die Adresse, dazwischen die Seite. Sonst nichts.</span>
+        <span lang="en">A browser for Windows 11 that stays out of the way: your tabs on the left, as narrow as their icons, the address on top, the page in between. Nothing else.</span>
       </p>
       <div class="get-row">
-        <a class="k-btn k-btn--primary get" href="https://github.com/vanozoda/kante-release/releases/download/v0.4.0/kante-setup-0.4.0.exe"><i class="k-icon" data-icon="download"></i><span lang="de">kante herunterladen</span><span lang="en">Download kante</span></a>
-        <span class="meta"><span lang="de">Version 0.4.0 · Windows 11, 64 Bit · ohne Administratorrechte</span><span lang="en">Version 0.4.0 · Windows 11, 64-bit · no administrator rights</span></span>
+        <a class="k-btn k-btn--primary get" href="https://github.com/vanozoda/kante-release/releases/download/v0.5.0/kante-setup-0.5.0.exe"><i class="k-icon" data-icon="download"></i><span lang="de">kante herunterladen</span><span lang="en">Download kante</span></a>
+        <span class="meta"><span lang="de">Version 0.5.0 · Windows 11, 64 Bit · ohne Administratorrechte</span><span lang="en">Version 0.5.0 · Windows 11, 64-bit · no administrator rights</span></span>
       </div>
     </div>
 
-    <!-- The whole window: bar with pins, tabs, spaces and doors, the page under it. -->
+    <!-- The whole window: the column folded to the favicons, the bar over the
+         page at its top, the page under it. -->
     <div class="scene" data-w="1040" style="max-width:1040px" aria-hidden="true">
       <div class="stage k-root" inert style="width:1040px">
         <div class="win frame" style="height:560px">
-          <div class="k-strip">
-            <span class="k-iconbtn"><i class="k-icon" data-icon="back"></i></span><span class="k-iconbtn"><i class="k-icon" data-icon="reload"></i></span><span class="sep"></span>
-            <span class="k-pin">M</span><span class="k-pin">K</span>
-            <span class="sep"></span>
-            <div class="k-strip__tabs k-tabs"><span class="k-tabs__pill"></span>
-              <span class="k-tab is-selected"><span class="k-tab__fav n">E</span><span class="k-tab__title"><span lang="de">Die Kante des Fensters – Essay</span><span lang="en">The edge of the window – essay</span></span><i class="k-icon k-tab__close" data-icon="close"></i></span>
-              <span class="k-tab"><span class="k-tab__fav a">P</span><span class="k-tab__title"><span lang="de">Posteingang (12)</span><span lang="en">Inbox (12)</span></span><i class="k-icon k-tab__close" data-icon="close"></i></span>
-              <span class="k-tab"><span class="k-tab__fav i">W</span><span class="k-tab__title"><span lang="de">Wetter in Köln</span><span lang="en">Weather in Cologne</span></span><i class="k-icon k-tab__close" data-icon="close"></i></span>
+          <div class="col">
+            <div class="pins"><span class="k-pin"><span class="pinface">M</span></span><span class="k-pin"><span class="pinface">K</span></span></div>
+            <div class="k-tabs"><span class="k-tabs__pill"></span>
+              <span class="k-tab is-selected"><span class="k-tab__fav n">E</span></span>
+              <span class="k-tab"><span class="k-tab__fav a">P</span></span>
+              <span class="k-tab"><span class="k-tab__fav i">W</span></span>
             </div>
-            <span class="k-iconbtn"><i class="k-icon" data-icon="new-tab"></i></span>
+            <span class="k-tab newtab"><i class="k-icon" data-icon="new-tab"></i></span>
+            <div class="foot"><div class="sp"><span class="k-space is-active"><span class="face">🏠</span></span></div></div>
+          </div>
+          <div class="win__main">
+          <div class="k-strip">
+            <span class="k-iconbtn"><i class="k-icon" data-icon="back"></i></span><span class="k-iconbtn"><i class="k-icon" data-icon="reload"></i></span>
+            <span class="k-field"><span class="k-field__host">zeitschrift.example</span></span>
             <span class="grow"></span>
-            <div class="sp"><span class="k-space is-active"><span class="face">🏠</span></span><span class="k-space"><span class="face">💼</span></span><span class="k-space"><span class="face">🎓</span></span><span class="k-iconbtn add"><i class="k-icon" data-icon="new-tab"></i></span></div>
             <div class="doors"><span class="k-iconbtn"><i class="k-icon" data-icon="passwords"></i></span><span class="k-iconbtn"><i class="k-icon" data-icon="extensions"></i></span><span class="k-iconbtn"><i class="k-icon" data-icon="menu"></i></span></div>
             <div class="k-caption"><span class="k-iconbtn"><i class="k-icon" data-icon="minimize"></i></span><span class="k-iconbtn"><i class="k-icon" data-icon="maximize"></i></span><span class="k-iconbtn k-iconbtn--close"><i class="k-icon" data-icon="close"></i></span></div>
           </div>
@@ -281,6 +298,7 @@
               <span class="pg__img"></span>
               <span class="pg__line" style="width:92%"></span><span class="pg__line" style="width:84%"></span><span class="pg__line" style="width:88%"></span>
             </div>
+          </div>
           </div>
         </div>
       </div>
@@ -299,33 +317,43 @@
       <!-- 1 The bar, folded -->
       <section class="feature">
         <div class="feature__text">
-          <span class="label-row"><span lang="de">Die Leiste</span><span lang="en">The bar</span></span>
+          <span class="label-row"><span lang="de">Spalte und Leiste</span><span lang="en">The column and the bar</span></span>
           <h2><span lang="de">Die Seite, bis an den Rand</span><span lang="en">The page, edge to edge</span></h2>
-          <p><span lang="de">Keine Toolbar, keine Startseite, keine Statusleiste. Das ganze Fenster gehört der Seite. Zurück und Vor, Tabs, angeheftete Seiten und Spaces teilen sich eine Leiste, und die ist sofort da, sobald die Maus an den oberen Rand kommt. Steht die Seite ganz oben, rückt sie dafür ein Stück nach unten.</span><span lang="en">No toolbar, no start page, no status bar. The whole window belongs to the page. Back and forward, tabs, pinned sites and spaces share one bar, and it is there the moment the pointer reaches the top edge. When the page is at its very top, it moves down to make room.</span></p>
+          <p><span lang="de">Keine Toolbar, keine Startseite, keine Statusleiste. Links stehen deine Tabs, angeheftete Seiten und Spaces, eingeklappt nur ihre Symbole; ruht die Maus darauf, klappt die Spalte über die Seite aus. Oben stehen Zurück, Neu laden und die Adresse, solange die Seite ganz oben ist. Scrollst du nach unten, gehört das ganze Fenster der Seite. Ein Stück nach oben, und die Leiste ist wieder da.</span><span lang="en">No toolbar, no start page, no status bar. Your tabs, pinned sites and spaces sit on the left, folded to their icons; rest the pointer there and the column opens over the page. Back, reload and the address sit on top while the page is at its very top. Scroll down and the whole window belongs to the page. Scroll up a little and the bar is back.</span></p>
           <div class="keys"><span class="k-kbd"><kbd lang="de">Strg</kbd><kbd lang="en">Ctrl</kbd><kbd>L</kbd><span class="what"><span lang="de">Adressfeld</span><span lang="en">Address field</span></span></span></div>
         </div>
         <div class="media">
           <div class="scene" data-w="600" style="max-width:600px" aria-hidden="true">
             <div class="stage k-root" inert style="width:600px">
-              <div class="frame" style="height:340px">
-                <div class="fold">
-                  <div class="pg__art">
-                    <span class="pg__kicker"><span lang="de">Essay · 6 Min. Lesezeit</span><span lang="en">Essay · 6 min read</span></span>
-                    <span class="pg__title"><span lang="de">Die Kante des Fensters</span><span lang="en">The edge of the window</span></span>
-                    <span class="pg__line" style="width:94%"></span><span class="pg__line" style="width:86%"></span><span class="pg__line" style="width:90%"></span><span class="pg__line" style="width:62%"></span>
-                  </div>
+              <div class="frame win" style="height:340px">
+                <div class="win__gap"></div>
+                <div class="win__main">
                   <div class="k-strip">
-                    <span class="k-iconbtn"><i class="k-icon" data-icon="back"></i></span><span class="k-iconbtn"><i class="k-icon" data-icon="reload"></i></span><span class="sep"></span>
-                    <div class="k-strip__tabs k-tabs"><span class="k-tabs__pill"></span>
-                      <span class="k-tab is-selected"><span class="k-tab__fav n">E</span><span class="k-tab__title"><span lang="de">Die Kante des Fensters</span><span lang="en">The edge of the window</span></span><i class="k-icon k-tab__close" data-icon="close"></i></span>
-                      <span class="k-tab"><span class="k-tab__fav a">P</span><span class="k-tab__title"><span lang="de">Posteingang</span><span lang="en">Inbox</span></span><i class="k-icon k-tab__close" data-icon="close"></i></span>
+            <span class="k-iconbtn"><i class="k-icon" data-icon="back"></i></span><span class="k-iconbtn"><i class="k-icon" data-icon="reload"></i></span>
+            <span class="k-field"><span class="k-field__host">zeitschrift.example</span></span>
+            <span class="grow"></span>
+            <div class="doors"><span class="k-iconbtn"><i class="k-icon" data-icon="passwords"></i></span><span class="k-iconbtn"><i class="k-icon" data-icon="extensions"></i></span><span class="k-iconbtn"><i class="k-icon" data-icon="menu"></i></span></div>
+            <div class="k-caption"><span class="k-iconbtn"><i class="k-icon" data-icon="minimize"></i></span><span class="k-iconbtn"><i class="k-icon" data-icon="maximize"></i></span><span class="k-iconbtn k-iconbtn--close"><i class="k-icon" data-icon="close"></i></span></div>
+          </div>
+                  <div class="win__page">
+                    <div class="pg__art">
+                      <span class="pg__kicker"><span lang="de">Essay · 6 Min. Lesezeit</span><span lang="en">Essay · 6 min read</span></span>
+                      <span class="pg__title"><span lang="de">Die Kante des Fensters</span><span lang="en">The edge of the window</span></span>
+                      <span class="pg__line" style="width:94%"></span><span class="pg__line" style="width:86%"></span><span class="pg__line" style="width:90%"></span><span class="pg__line" style="width:62%"></span>
                     </div>
-                    <span class="grow"></span>
-                    <div class="sp"><span class="k-space is-active"><span class="face">🏠</span></span><span class="k-space"><span class="face">💼</span></span></div>
-                    <div class="k-caption"><span class="k-iconbtn"><i class="k-icon" data-icon="minimize"></i></span><span class="k-iconbtn"><i class="k-icon" data-icon="maximize"></i></span><span class="k-iconbtn k-iconbtn--close"><i class="k-icon" data-icon="close"></i></span></div>
                   </div>
-                  <div class="fold__hint"><span class="k-hint"><i class="k-icon" data-icon="unfold"></i><span lang="de">Maus an den oberen Rand: die Leiste ist da</span><span lang="en">Pointer to the top edge: the bar is there</span></span></div>
                 </div>
+                <div class="col is-over">
+                  <div class="pins"><span class="k-pin"><span class="pinface">M</span><span class="k-pin__title"><span lang="de">Mail</span><span lang="en">Mail</span></span></span></div>
+                  <div class="k-tabs"><span class="k-tabs__pill"></span>
+                    <span class="k-tab is-selected"><span class="k-tab__fav n">E</span><span class="k-tab__title"><span lang="de">Die Kante des Fensters</span><span lang="en">The edge of the window</span></span><i class="k-icon k-tab__close" data-icon="close"></i></span>
+                    <span class="k-tab"><span class="k-tab__fav a">P</span><span class="k-tab__title"><span lang="de">Posteingang</span><span lang="en">Inbox</span></span></span>
+                    <span class="k-tab"><span class="k-tab__fav i">W</span><span class="k-tab__title"><span lang="de">Wetter in Köln</span><span lang="en">Weather in Cologne</span></span></span>
+                  </div>
+                  <span class="k-tab newtab"><i class="k-icon" data-icon="new-tab"></i><span class="k-tab__title"><span lang="de">Neuer Tab</span><span lang="en">New tab</span></span></span>
+                  <div class="foot"><div class="sp"><span class="k-space is-active"><span class="face">🏠</span></span><span class="k-space"><span class="face">💼</span></span><span class="k-iconbtn add"><i class="k-icon" data-icon="new-tab"></i></span></div></div>
+                </div>
+                <div class="fold__hint"><span class="k-hint"><i class="k-icon" data-icon="unfold"></i><span lang="de">Maus auf die Spalte: sie klappt aus</span><span lang="en">Pointer on the column: it opens</span></span></div>
               </div>
             </div>
           </div>
@@ -337,24 +365,32 @@
         <div class="feature__text">
           <span class="label-row">Spaces</span>
           <h2><span lang="de">Getrennt, was getrennt bleiben soll</span><span lang="en">Apart what should stay apart</span></h2>
-          <p><span lang="de">Arbeit, Zuhause, ein Projekt: Jeder Space hat eigene Tabs und Pins und zeigt sein Emoji in der Leiste. Alt+1 bis 9 oder ein Wischen auf dem Touchpad über der Leiste wechselt. Ein neuer Space ist angemeldet wie hier oder frisch, mit eigenen Cookies und Anmeldungen. Ein Rechtsklick auf das Emoji bearbeitet, verschiebt oder löscht ihn.</span><span lang="en">Work, home, a project: each space has its own tabs and pins and shows its emoji in the bar. Alt+1 to 9 or a touchpad swipe over the bar switches. A new space is either signed in like here or fresh, with its own cookies and sign-ins. Right-click the emoji to edit, move or delete it.</span></p>
+          <p><span lang="de">Arbeit, Zuhause, ein Projekt: Jeder Space hat eigene Tabs und Pins und zeigt sein Emoji unten in der Spalte. Alt+1 bis 9 oder ein Wischen seitwärts auf dem Touchpad über der Spalte wechselt. Ein neuer Space ist angemeldet wie hier oder frisch, mit eigenen Cookies und Anmeldungen. Ein Rechtsklick auf das Emoji bearbeitet, verschiebt oder löscht ihn.</span><span lang="en">Work, home, a project: each space has its own tabs and pins and shows its emoji at the foot of the column. Alt+1 to 9 or a sideways touchpad swipe over the column switches. A new space is either signed in like here or fresh, with its own cookies and sign-ins. Right-click the emoji to edit, move or delete it.</span></p>
           <div class="keys"><span class="k-kbd"><kbd>Alt</kbd><kbd>1</kbd>–<kbd>9</kbd><span class="what"><span lang="de">Space wechseln</span><span lang="en">Switch space</span></span></span></div>
         </div>
         <div class="media">
           <div class="scene" data-w="600" style="max-width:600px" aria-hidden="true">
             <div class="stage k-root" inert style="width:600px">
               <div class="frame win" style="height:470px;position:relative">
-                <div class="k-strip">
-                  <span class="k-iconbtn"><i class="k-icon" data-icon="back"></i></span><span class="k-iconbtn"><i class="k-icon" data-icon="reload"></i></span><span class="sep"></span>
-                  <div class="k-strip__tabs k-tabs"><span class="k-tabs__pill"></span>
+                <div class="win__gap"></div>
+                <div class="win__main">
+                  <div class="k-strip">
+            <span class="k-iconbtn"><i class="k-icon" data-icon="back"></i></span><span class="k-iconbtn"><i class="k-icon" data-icon="reload"></i></span>
+            <span class="k-field"><span class="k-field__host">bahn.example</span></span>
+            <span class="grow"></span>
+            <div class="doors"><span class="k-iconbtn"><i class="k-icon" data-icon="passwords"></i></span><span class="k-iconbtn"><i class="k-icon" data-icon="extensions"></i></span><span class="k-iconbtn"><i class="k-icon" data-icon="menu"></i></span></div>
+            <div class="k-caption"><span class="k-iconbtn"><i class="k-icon" data-icon="minimize"></i></span><span class="k-iconbtn"><i class="k-icon" data-icon="maximize"></i></span><span class="k-iconbtn k-iconbtn--close"><i class="k-icon" data-icon="close"></i></span></div>
+          </div>
+                  <div class="win__page">
+                    <div class="pg__art" style="padding-left:280px"><span class="pg__line" style="width:60%;height:14px"></span><span class="pg__line" style="width:90%"></span><span class="pg__line" style="width:82%"></span><span class="pg__img" style="width:66%"></span><span class="pg__line" style="width:40%"></span></div>
+                  </div>
+                </div>
+                <div class="col is-over">
+                  <div class="k-tabs"><span class="k-tabs__pill"></span>
                     <span class="k-tab is-selected"><span class="k-tab__fav i">B</span><span class="k-tab__title"><span lang="de">Bahn: Köln – Lissabon</span><span lang="en">Rail: Cologne – Lisbon</span></span><i class="k-icon k-tab__close" data-icon="close"></i></span>
                   </div>
-                  <span class="grow"></span>
-                  <div class="sp"><span class="k-space"><span class="face">🏠</span></span><span class="k-space is-active"><span class="face">💼</span></span><span class="k-space"><span class="face">🎓</span></span><span class="k-iconbtn add is-hot"><i class="k-icon" data-icon="new-tab"></i></span></div>
-                  <div class="k-caption"><span class="k-iconbtn"><i class="k-icon" data-icon="minimize"></i></span><span class="k-iconbtn"><i class="k-icon" data-icon="maximize"></i></span><span class="k-iconbtn k-iconbtn--close"><i class="k-icon" data-icon="close"></i></span></div>
-                </div>
-                <div class="win__page">
-                  <div class="pg__art"><span class="pg__line" style="width:60%;height:14px"></span><span class="pg__line" style="width:90%"></span><span class="pg__line" style="width:82%"></span><span class="pg__img" style="width:46%"></span><span class="pg__line" style="width:40%"></span></div>
+                  <span class="k-tab newtab"><i class="k-icon" data-icon="new-tab"></i><span class="k-tab__title"><span lang="de">Neuer Tab</span><span lang="en">New tab</span></span></span>
+                  <div class="foot"><div class="sp"><span class="k-space"><span class="face">🏠</span></span><span class="k-space is-active"><span class="face">💼</span></span><span class="k-space"><span class="face">🎓</span></span><span class="k-iconbtn add is-hot"><i class="k-icon" data-icon="new-tab"></i></span></div></div>
                 </div>
                 <div class="spacecard">
                   <span class="k-panel__title"><span lang="de">Neuer Space</span><span lang="en">New space</span></span>
@@ -420,20 +456,26 @@
           <div class="scene" data-w="600" style="max-width:600px" aria-hidden="true">
             <div class="stage k-root" inert style="width:600px">
               <div class="frame win" style="height:450px;position:relative">
-                <div class="k-strip">
-                  <span class="k-iconbtn"><i class="k-icon" data-icon="back"></i></span><span class="k-iconbtn"><i class="k-icon" data-icon="reload"></i></span><span class="sep"></span>
-                  <span class="k-pin">M</span>
-                  <span class="sep"></span>
-                  <div class="k-strip__tabs k-tabs"><span class="k-tabs__pill"></span>
-                    <span class="k-tab is-selected"><span class="k-tab__fav n">B</span><span class="k-tab__title">Bundesanzeiger</span><i class="k-icon k-tab__close" data-icon="close"></i></span>
-                    <span class="k-tab"><span class="k-tab__fav m">W</span><span class="tab-warn"><i class="k-icon" data-icon="not-secure"></i><span lang="de">Nicht sicher</span><span lang="en">Not secure</span></span><span class="k-tab__title">wlan-login</span><i class="k-icon k-tab__close" data-icon="close"></i></span>
+                <div class="win__gap"></div>
+                <div class="win__main">
+                  <div class="k-strip">
+            <span class="k-iconbtn"><i class="k-icon" data-icon="back"></i></span><span class="k-iconbtn"><i class="k-icon" data-icon="reload"></i></span>
+            <span class="k-field"><span class="k-field__host">bundesanzeiger.de</span></span>
+            <span class="grow"></span>
+            <div class="doors"><span class="k-iconbtn"><i class="k-icon" data-icon="passwords"></i></span><span class="k-iconbtn"><i class="k-icon" data-icon="extensions"></i></span><span class="k-iconbtn"><i class="k-icon" data-icon="menu"></i></span></div>
+            <div class="k-caption"><span class="k-iconbtn"><i class="k-icon" data-icon="minimize"></i></span><span class="k-iconbtn"><i class="k-icon" data-icon="maximize"></i></span><span class="k-iconbtn k-iconbtn--close"><i class="k-icon" data-icon="close"></i></span></div>
+          </div>
+                  <div class="win__page">
+                    <div class="pg__site"><span class="pg__logo"></span><span class="pg__bar" style="width:110px"></span></div>
+                    <div class="pg__art" style="padding-left:480px"><span class="pg__line" style="width:100%;height:14px"></span><span class="pg__line" style="width:90%"></span><span class="pg__line" style="width:80%"></span><span class="pg__img"></span></div>
                   </div>
-                  <span class="grow"></span>
-                  <div class="k-caption"><span class="k-iconbtn"><i class="k-icon" data-icon="minimize"></i></span><span class="k-iconbtn"><i class="k-icon" data-icon="maximize"></i></span><span class="k-iconbtn k-iconbtn--close"><i class="k-icon" data-icon="close"></i></span></div>
                 </div>
-                <div class="win__page">
-                  <div class="pg__site"><span class="pg__logo"></span><span class="pg__bar" style="width:110px"></span></div>
-                  <div class="pg__art" style="padding-left:380px"><span class="pg__line" style="width:100%;height:14px"></span><span class="pg__line" style="width:90%"></span><span class="pg__line" style="width:80%"></span><span class="pg__img"></span></div>
+                <div class="col is-over">
+                  <div class="pins"><span class="k-pin"><span class="pinface">M</span><span class="k-pin__title">Mail</span></span></div>
+                  <div class="k-tabs"><span class="k-tabs__pill"></span>
+                    <span class="k-tab is-selected"><span class="k-tab__fav n">B</span><span class="k-tab__title">Bundesanzeiger</span><i class="k-icon k-tab__close" data-icon="close"></i></span>
+                    <span class="k-tab"><span class="k-tab__fav m">W</span><span class="k-tab__title">wlan-login</span></span>
+                  </div>
                 </div>
                 <div class="k-sitecard">
                   <div><div class="k-sitecard__host">bundesanzeiger.de</div><div class="k-mono k-muted">https://www.bundesanzeiger.de/pub/</div></div>
@@ -556,11 +598,11 @@
       <img src="design/kante-icon.svg" alt="" width="72" height="72">
       <h2><span lang="de">kante ausprobieren</span><span lang="en">Try kante</span></h2>
       <div class="get-row">
-        <a class="k-btn k-btn--primary get" href="https://github.com/vanozoda/kante-release/releases/download/v0.4.0/kante-setup-0.4.0.exe"><i class="k-icon" data-icon="download"></i><span lang="de">kante herunterladen</span><span lang="en">Download kante</span></a>
-        <span class="meta"><span lang="de">Version 0.4.0 · Windows 11, 64 Bit · ohne Administratorrechte</span><span lang="en">Version 0.4.0 · Windows 11, 64-bit · no administrator rights</span></span>
+        <a class="k-btn k-btn--primary get" href="https://github.com/vanozoda/kante-release/releases/download/v0.5.0/kante-setup-0.5.0.exe"><i class="k-icon" data-icon="download"></i><span lang="de">kante herunterladen</span><span lang="en">Download kante</span></a>
+        <span class="meta"><span lang="de">Version 0.5.0 · Windows 11, 64 Bit · ohne Administratorrechte</span><span lang="en">Version 0.5.0 · Windows 11, 64-bit · no administrator rights</span></span>
       </div>
       <footer>
-        <a href="https://github.com/vanozoda/kante-release/releases/tag/v0.4.0"><span lang="de">Neu in 0.4.0</span><span lang="en">New in 0.4.0</span></a>
+        <a href="https://github.com/vanozoda/kante-release/releases/tag/v0.5.0"><span lang="de">Neu in 0.5.0</span><span lang="en">New in 0.5.0</span></a>
         <a href="https://github.com/vanozoda/kante-release/releases"><span lang="de">Alle Versionen</span><span lang="en">All versions</span></a>
         <a href="https://github.com/vanozoda/kante-release/issues"><span lang="de">Fehler melden</span><span lang="en">Report a bug</span></a>
         <a href="https://github.com/vanozoda/kante-release/blob/HEAD/SECURITY.md"><span lang="de">Sicherheitslücke melden</span><span lang="en">Report a vulnerability</span></a>
