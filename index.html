@@ -8,7 +8,7 @@
 <link rel="icon" href="favicon.ico" sizes="any">
 <link rel="icon" href="design/kante-icon.svg" type="image/svg+xml">
 <!-- The Pages site under kante.vanozoda.com (DECISIONS.md D-023). cargo xtask
-     publish writes it with every release: 0.5.0 and https://github.com/vanozoda/kante-release/releases/download/v0.5.0/kante-setup-0.5.0.exe become the
+     publish writes it with every release: 0.6.0 and https://github.com/vanozoda/kante-release/releases/download/v0.6.0/kante-setup-0.6.0.exe become the
      version and its installer, the design/ files come from shell/design.
      Every picture is a scene built from the design package's components. -->
 <script>
@@ -85,18 +85,18 @@
   .win__main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
   .win__main > .k-strip { flex: none; padding-left: var(--space-2); gap: var(--space-2); box-shadow: inset 0 -1px 0 var(--line); }
   .win__page { flex: 1; background: var(--surface); overflow: hidden; position: relative; }
-  .win__gap { flex: none; width: 52px; }
-  .col { flex: none; width: 52px; display: flex; flex-direction: column; gap: 2px; padding: 40px 4px 8px; overflow: hidden; background: var(--chrome); box-shadow: inset -1px 0 0 var(--line); }
+  .win__gap { flex: none; width: 44px; }
+  .col { flex: none; width: 44px; display: flex; flex-direction: column; gap: 2px; padding: 40px 4px 8px 2px; overflow: hidden; background: var(--chrome); box-shadow: inset -1px 0 0 var(--line); }
   .col.is-over { position: absolute; left: 0; top: 0; bottom: 0; z-index: 2; width: 248px; box-shadow: var(--shadow-popover); }
   .col .k-tabs { gap: 2px; }
   .col .k-tabs__pill { top: 0; }
-  .col .k-tab, .col .k-pin { flex: none; display: flex; align-items: center; gap: var(--space-2); width: 100%; height: 32px; min-height: 0; padding: 0 var(--space-2) 0 14px; white-space: nowrap; }
+  .col .k-tab, .col .k-pin { flex: none; display: flex; align-items: center; gap: var(--space-2); width: 100%; height: 32px; min-height: 0; padding: 0 var(--space-2) 0 12px; white-space: nowrap; }
   .col .k-pin { border-radius: var(--radius-md); background: transparent; box-shadow: none; font: inherit; }
   .col .k-tab__title, .col .k-pin__title { flex: 1; min-width: 0; overflow: hidden; -webkit-mask-image: linear-gradient(90deg, rgb(0 0 0 / 1) 82%, transparent); mask-image: linear-gradient(90deg, rgb(0 0 0 / 1) 82%, transparent); }
   .col .pinface { width: 16px; height: 16px; flex: none; display: grid; place-items: center; border-radius: var(--radius-xs); background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); font: 600 10px/1 var(--font-sans); }
   .col .pins { display: flex; flex-direction: column; gap: 2px; padding-bottom: var(--space-2); margin-bottom: var(--space-1); border-bottom: 1px solid var(--line); }
   .col .newtab { color: var(--ink-muted); }
-  .col .foot { margin-top: auto; padding-left: 8px; }
+  .col .foot { margin-top: auto; padding-left: 6px; }
   .col .k-tab .k-icon:not(.k-tab__close) { color: var(--ink-muted); flex: none; }
   .col .k-tab .tab-warn .k-icon { color: var(--danger); }
   .k-strip .k-field { flex: 0 1 300px; min-width: 0; }
@@ -250,7 +250,7 @@
     <nav class="langs" aria-label="Sprache · Language">
       <button type="button" data-set-lang="de" aria-pressed="true" title="Deutsch">DE</button><button type="button" data-set-lang="en" aria-pressed="false" title="English">EN</button>
     </nav>
-    <a class="k-btn k-btn--secondary get-sm" href="https://github.com/vanozoda/kante-release/releases/download/v0.5.0/kante-setup-0.5.0.exe"><i class="k-icon" data-icon="download"></i><span class="lbl"><span lang="de">Herunterladen</span><span lang="en">Download</span></span></a>
+    <a class="k-btn k-btn--secondary get-sm" href="https://github.com/vanozoda/kante-release/releases/download/v0.6.0/kante-setup-0.6.0.exe"><i class="k-icon" data-icon="download"></i><span class="lbl"><span lang="de">Herunterladen</span><span lang="en">Download</span></span></a>
   </header>
 
   <div class="wrap">
@@ -261,8 +261,8 @@
         <span lang="en">A browser for Windows 11 that stays out of the way: your tabs on the left, as narrow as their icons, the address on top, the page in between. Nothing else.</span>
       </p>
       <div class="get-row">
-        <a class="k-btn k-btn--primary get" href="https://github.com/vanozoda/kante-release/releases/download/v0.5.0/kante-setup-0.5.0.exe"><i class="k-icon" data-icon="download"></i><span lang="de">kante herunterladen</span><span lang="en">Download kante</span></a>
-        <span class="meta"><span lang="de">Version 0.5.0 · Windows 11, 64 Bit · ohne Administratorrechte</span><span lang="en">Version 0.5.0 · Windows 11, 64-bit · no administrator rights</span></span>
+        <a class="k-btn k-btn--primary get" href="https://github.com/vanozoda/kante-release/releases/download/v0.6.0/kante-setup-0.6.0.exe"><i class="k-icon" data-icon="download"></i><span lang="de">kante herunterladen</span><span lang="en">Download kante</span></a>
+        <span class="meta"><span lang="de">Version 0.6.0 · Windows 11, 64 Bit · ohne Administratorrechte</span><span lang="en">Version 0.6.0 · Windows 11, 64-bit · no administrator rights</span></span>
       </div>
     </div>
 
@@ -598,11 +598,11 @@
       <img src="design/kante-icon.svg" alt="" width="72" height="72">
       <h2><span lang="de">kante ausprobieren</span><span lang="en">Try kante</span></h2>
       <div class="get-row">
-        <a class="k-btn k-btn--primary get" href="https://github.com/vanozoda/kante-release/releases/download/v0.5.0/kante-setup-0.5.0.exe"><i class="k-icon" data-icon="download"></i><span lang="de">kante herunterladen</span><span lang="en">Download kante</span></a>
-        <span class="meta"><span lang="de">Version 0.5.0 · Windows 11, 64 Bit · ohne Administratorrechte</span><span lang="en">Version 0.5.0 · Windows 11, 64-bit · no administrator rights</span></span>
+        <a class="k-btn k-btn--primary get" href="https://github.com/vanozoda/kante-release/releases/download/v0.6.0/kante-setup-0.6.0.exe"><i class="k-icon" data-icon="download"></i><span lang="de">kante herunterladen</span><span lang="en">Download kante</span></a>
+        <span class="meta"><span lang="de">Version 0.6.0 · Windows 11, 64 Bit · ohne Administratorrechte</span><span lang="en">Version 0.6.0 · Windows 11, 64-bit · no administrator rights</span></span>
       </div>
       <footer>
-        <a href="https://github.com/vanozoda/kante-release/releases/tag/v0.5.0"><span lang="de">Neu in 0.5.0</span><span lang="en">New in 0.5.0</span></a>
+        <a href="https://github.com/vanozoda/kante-release/releases/tag/v0.6.0"><span lang="de">Neu in 0.6.0</span><span lang="en">New in 0.6.0</span></a>
         <a href="https://github.com/vanozoda/kante-release/releases"><span lang="de">Alle Versionen</span><span lang="en">All versions</span></a>
         <a href="https://github.com/vanozoda/kante-release/issues"><span lang="de">Fehler melden</span><span lang="en">Report a bug</span></a>
         <a href="https://github.com/vanozoda/kante-release/blob/HEAD/SECURITY.md"><span lang="de">Sicherheitslücke melden</span><span lang="en">Report a vulnerability</span></a>
