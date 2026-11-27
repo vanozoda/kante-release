@@ -27,7 +27,9 @@
   -webkit-font-smoothing: antialiased;
   font-feature-settings: "tnum" 0;
 }
-.k-root ::selection { background: var(--accent-soft); color: var(--ink); }
+/* Selected text as a fill, as Windows shows it: accent-soft was hardly
+   different from the field's sunken ground. */
+.k-root ::selection { background: var(--accent); color: var(--on-accent); }
 .k-icon { width: var(--size-icon); height: var(--size-icon); flex: none; display: inline-block; vertical-align: middle; }
 .k-icon svg { width: 100%; height: 100%; display: block; }
 .k-icon--lg { width: var(--size-icon-lg); height: var(--size-icon-lg); }
